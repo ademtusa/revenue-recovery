@@ -10,19 +10,19 @@ export function LoadingEngine({ onComplete }: LoadingEngineProps) {
   const [dynamicText, setDynamicText] = useState('');
 
   const steps = [
-    { icon: <Search size={24} className="text-blue-500" />, text: "Geçmiş iletişim logları taranıyor..." },
-    { icon: <Activity size={24} className="text-orange-500" />, text: "Sessiz müşteri kopuşları tespit ediliyor..." },
-    { icon: <ShieldAlert size={24} className="text-red-500" />, text: "Takip boşlukları analiz ediliyor..." },
-    { icon: <Cpu size={24} className="text-green-500" />, text: "Kurtarılabilir gelir hesaplanıyor..." }
+    { icon: <Search size={24} className="text-blue-500" />, text: "E-Posta logları & Workspace veri akışları taranıyor..." },
+    { icon: <Activity size={24} className="text-orange-500" />, text: "Olay güdümlü 'customer_inactive' & 'churn' riskleri tespit ediliyor..." },
+    { icon: <ShieldAlert size={24} className="text-red-500" />, text: "'proposal_followup_missed' (Unutulmuş Takip) açıkları analiz ediliyor..." },
+    { icon: <Cpu size={24} className="text-green-500" />, text: "Öncelik Puanları (Priority Score) ve kurtarılabilir ciro hesaplanıyor..." }
   ];
 
   const analysisTargets = [
-    "Ahmet Yılmaz (Q1 Teklif) inceleniyor...",
-    "Lumina Mimarlık e-posta zinciri taranıyor...",
-    "Nexus Lojistik son temas tarihi: 7 ay önce...",
-    "Anahtar kelime analizi: 'Bütçe', 'Düşüneceğiz'...",
-    "Duygu analizi (Sentiment) hesaplanıyor...",
-    "Gözden kaçan fırsatlar haritalandırılıyor..."
+    "[TARAMA] Ahmet Yılmaz (TechCorp) için 'proposal_viewed' logu eşleştirildi...",
+    "[KURAL MOTORU] 'customer_inactive' uyarısı tetiklendi: Selin Kaya oturum aralığı > 30 gün...",
+    "[SENSÖR] Caner Öz (Nexus) son temas süresi: 7 ay (Risk Skoru: %85)...",
+    "[ANALİZ] Teklif dokümanı etkileşim verisi okunuyor: 3 kez görüntülendi...",
+    "[GÜVENLİK] Uçtan Uca Şifreli Local Sandbox izole edildi...",
+    "[İSTİHBARAT] ROI & ciro kayıp oranları matrisi önceliklendiriliyor..."
   ];
 
   // Main Steps Interval
@@ -64,8 +64,8 @@ export function LoadingEngine({ onComplete }: LoadingEngineProps) {
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold mb-2 tracking-tight">Yapay Zeka Teşhis Motoru Aktif</h2>
-        <p className="text-xs text-primary font-mono mb-8 h-4">{dynamicText}</p>
+        <h2 className="text-2xl font-bold mb-2 tracking-tight">Zeka Teşhis Motoru Aktif</h2>
+        <p className="text-xs text-primary font-mono mb-8 h-8 px-2 select-none overflow-hidden text-ellipsis whitespace-nowrap">{dynamicText}</p>
 
         <div className="glass-panel p-6 text-left relative overflow-hidden">
           {/* Subtle scanning line effect */}
@@ -92,3 +92,4 @@ export function LoadingEngine({ onComplete }: LoadingEngineProps) {
     </div>
   );
 }
+
