@@ -317,7 +317,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout }: DiagnosisViewPro
           </table>
 
           <div class="recommendations">
-            <h3>DespSeek Recovery Intelligence Stratejik Yol Haritası</h3>
+            <h3>Creaizen Recovery Intelligence Stratejik Yol Haritası</h3>
             <ul>
               <li><strong>Terk Edilmiş Fırsatlar (Kritik):</strong> Teklif iletildikten sonra 14 gün boyunca aranmayan fırsatlara Kurtarma İletişim Şablonu kullanılarak pürüz giderici mesajlar acilen iletilmelidir.</li>
               <li><strong>Üyelik Çürümesi (Orta):</strong> Platform login oranlarında %40+ düşüş saptanan Lumina Mimarlık gibi hesaplara ücretsiz durum değerlendirme randevusu tanımlanmalıdır.</li>
@@ -447,7 +447,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout }: DiagnosisViewPro
         <div>
           <span className="badge badge-gray mb-3 text-[10px] tracking-widest text-faint border-zinc-800">GELİR REHABİLİTASYON OPERASYONU</span>
           <h1 className="text-2xl md:text-3xl font-extrabold mb-2 tracking-tight text-white">
-            DespSeek <span className="text-primary font-bold">Recovery Intelligence Operations</span>
+            Creaizen <span className="text-primary font-bold">Recovery Intelligence Operations</span>
           </h1>
           <p className="text-muted text-sm leading-relaxed">Müşteri veritabanınız ve iletişim loglarınız üzerinden tespit edilen sessiz gelir kayıpları ve kurtarma radarı.</p>
         </div>

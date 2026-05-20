@@ -76,7 +76,7 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
       <div className="flex justify-between items-center w-full max-w-4xl mx-auto mb-16 border-b border-zinc-800/40 pb-4">
         <div className="flex items-center gap-2">
           <Cpu className="text-blue-500 animate-pulse-slow" size={18} />
-          <span className="font-extrabold text-xs tracking-wider text-white uppercase font-mono">DESPSEEK RRS</span>
+          <span className="font-extrabold text-xs tracking-wider text-white uppercase font-mono">CREAIZEN RRS</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-[10px] text-muted font-bold tracking-wide bg-zinc-950/80 border border-zinc-850 px-3 py-1 rounded-full uppercase">
