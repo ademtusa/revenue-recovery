@@ -43,8 +43,8 @@ export interface LeadCaptureRecord {
   estimatedLoss: number;
 }
 
-const STORAGE_KEY = 'creaizen_revenue_records';
-const LEAD_STORAGE_KEY = 'creaizen_lead_captures';
+const STORAGE_KEY = 'rrio_revenue_records';
+const LEAD_STORAGE_KEY = 'rrio_lead_captures';
 
 export const initializeDB = () => {
   const existing = localStorage.getItem(STORAGE_KEY);

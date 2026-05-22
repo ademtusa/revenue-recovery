@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { ShieldCheck, ArrowRight, LogIn, Cpu } from 'lucide-react';
-import { Button } from '../components/Button';
+import { ShieldCheck, LogIn, ArrowRight, Cpu, Zap, Lock } from 'lucide-react';
 
 interface AuthViewProps {
   onAuthSuccess: (userEmail: string) => void;
@@ -35,10 +34,8 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
       }
       accounts[email] = { password, name: name || 'Kullanıcı' };
       localStorage.setItem(accountsKey, JSON.stringify(accounts));
-      setSuccess('Hesabınız başarıyla oluşturuldu! Giriş yapılıyor...');
-      setTimeout(() => {
-        onAuthSuccess(email);
-      }, 1000);
+      setSuccess('Hesabınız oluşturuldu! Giriş yapılıyor...');
+      setTimeout(() => onAuthSuccess(email), 1000);
     } else {
       const user = accounts[email];
       if (!user || user.password !== password) {
@@ -46,15 +43,12 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
         return;
       }
       setSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
-      setTimeout(() => {
-        onAuthSuccess(email);
-      }, 1000);
+      setTimeout(() => onAuthSuccess(email), 1000);
     }
   };
 
   const handleQuickDemoLogin = () => {
     const demoEmail = 'demo@rrs-platform.com';
-    // Add default account if it doesn't exist
     const accountsKey = 'rrs_simulated_accounts';
     const accountsRaw = localStorage.getItem(accountsKey);
     const accounts = accountsRaw ? JSON.parse(accountsRaw) : {};
@@ -62,134 +56,187 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
       accounts[demoEmail] = { password: 'demopassword123', name: 'Demo Kullanıcı' };
       localStorage.setItem(accountsKey, JSON.stringify(accounts));
     }
-    
-    // Set active session
     localStorage.setItem('rrs_active_session', demoEmail);
     onAuthSuccess(demoEmail);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden bg-[#050814]">
-      {/* Background gradients */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 rounded-full bg-orange-500/5 blur-[120px] pointer-events-none" />
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '1.5rem',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      {/* Ambient background blobs */}
+      <div style={{
+        position: 'absolute', top: '-10%', left: '-5%',
+        width: '500px', height: '500px', borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(13,211,255,0.06) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute', bottom: '-10%', right: '-5%',
+        width: '400px', height: '400px', borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(255,126,71,0.05) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
 
-      <div className="max-w-md w-full space-y-8 z-10">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-primary mb-6 shadow-inner">
-            <Cpu size={32} className="text-blue-500 animate-pulse-slow" />
+      <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 1 }} className="animate-in">
+
+        {/* Logo + Title */}
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: '56px', height: '56px', borderRadius: '16px',
+            background: 'rgba(13,211,255,0.1)',
+            border: '1px solid rgba(13,211,255,0.22)',
+            marginBottom: '1.25rem',
+            boxShadow: '0 0 24px rgba(13,211,255,0.12)',
+          }}>
+            <Cpu size={26} style={{ color: 'var(--accent-primary)' }} className="animate-pulse-slow" />
           </div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-white">
+          <h1 style={{
+            fontSize: '1.625rem',
+            fontWeight: 800,
+            letterSpacing: '-0.03em',
+            color: 'var(--text-main)',
+            marginBottom: '0.375rem',
+            lineHeight: 1.2,
+          }}>
             Revenue Recovery System
-          </h2>
-          <p className="mt-2 text-sm text-muted">
+          </h1>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
             Gelir kurtarma ve kayıp analitiği işletim platformu
           </p>
         </div>
 
-        <div className="glass-panel p-8 relative border border-zinc-800/60 shadow-[0_0_50px_rgba(59,130,246,0.05)]">
-          <div className="flex justify-between items-center mb-6 border-b border-zinc-800/80 pb-3">
-            <h3 className="text-lg font-bold text-white">
+        {/* Auth Card */}
+        <div className="auth-card" style={{ marginBottom: '1.25rem' }}>
+
+          {/* Card Header */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '1.25rem 1.5rem',
+            borderBottom: '1px solid var(--border)',
+          }}>
+            <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)' }}>
               {isSignUp ? 'Hesap Oluştur' : 'Sisteme Giriş'}
-            </h3>
+            </h2>
             <button
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setError('');
-                setSuccess('');
+              onClick={() => { setIsSignUp(!isSignUp); setError(''); setSuccess(''); }}
+              style={{
+                fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-primary)',
+                background: 'none', border: 'none', cursor: 'pointer',
+                padding: '0.25rem 0',
               }}
-              className="text-xs font-semibold text-primary hover:text-blue-400 transition-colors"
             >
-              {isSignUp ? 'Zaten hesabım var' : 'Yeni hesap oluştur'}
+              {isSignUp ? '← Giriş yap' : 'Yeni hesap →'}
             </button>
           </div>
 
-          {error && (
-            <div className="mb-4 p-3 rounded bg-red-500/10 border border-red-500/20 text-xs text-red-400 font-medium">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-4 p-3 rounded bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium">
-              {success}
-            </div>
-          )}
-
-          <form onSubmit={handleAuthSubmit} className="space-y-4">
-            {isSignUp && (
-              <div>
-                <label className="text-[10px] font-bold text-faint uppercase tracking-widest block mb-1">
-                  Şirket veya Yetkili Adı
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Ahmet Yılmaz"
-                  required
-                  className="form-input bg-black/50 border border-zinc-800 focus:border-blue-500 w-full pl-3 text-sm py-2 rounded"
-                />
+          {/* Card Body */}
+          <div style={{ padding: '1.5rem' }}>
+            {/* Alerts */}
+            {error && (
+              <div style={{
+                padding: '0.75rem 1rem', marginBottom: '1rem',
+                borderRadius: 'var(--r-sm)',
+                background: 'rgba(255,82,119,0.08)',
+                border: '1px solid rgba(255,82,119,0.22)',
+                color: 'var(--status-danger)',
+                fontSize: '0.8125rem', fontWeight: 500,
+              }}>
+                {error}
+              </div>
+            )}
+            {success && (
+              <div style={{
+                padding: '0.75rem 1rem', marginBottom: '1rem',
+                borderRadius: 'var(--r-sm)',
+                background: 'rgba(56,242,150,0.08)',
+                border: '1px solid rgba(56,242,150,0.22)',
+                color: 'var(--status-success)',
+                fontSize: '0.8125rem', fontWeight: 500,
+              }}>
+                {success}
               </div>
             )}
 
-            <div>
-              <label className="text-[10px] font-bold text-faint uppercase tracking-widest block mb-1">
-                E-Posta Adresi
-              </label>
-              <div className="relative">
+            <form onSubmit={handleAuthSubmit} className="stack-md">
+              {isSignUp && (
+                <div className="form-group">
+                  <label className="form-label">Şirket veya Yetkili Adı</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ahmet Yılmaz"
+                    required
+                    className="form-input"
+                  />
+                </div>
+              )}
+
+              <div className="form-group">
+                <label className="form-label">E-Posta Adresi</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
                   required
-                  className="form-input bg-black/50 border border-zinc-800 focus:border-blue-500 w-full pl-3 text-sm py-2 rounded"
+                  className="form-input"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="text-[10px] font-bold text-faint uppercase tracking-widest block mb-1">
-                Şifre
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="form-input bg-black/50 border border-zinc-800 focus:border-blue-500 w-full pl-3 text-sm py-2 rounded"
-              />
-            </div>
+              <div className="form-group">
+                <label className="form-label">Şifre</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="form-input"
+                />
+              </div>
 
-            <Button type="submit" variant="glow-blue" className="w-full py-2.5 text-sm font-semibold flex items-center justify-center gap-2">
-              {isSignUp ? 'Kayıt Ol' : 'Giriş Yap'} <LogIn size={16} />
-            </Button>
-          </form>
+              <button type="submit" className="btn btn-glow-blue" style={{ width: '100%', marginTop: '0.5rem' }}>
+                {isSignUp ? 'Kayıt Ol' : 'Giriş Yap'} <LogIn size={16} />
+              </button>
+            </form>
 
-          <div className="relative flex py-4 items-center">
-            <div className="flex-grow border-t border-zinc-800/80"></div>
-            <span className="flex-shrink mx-4 text-[10px] text-faint font-bold tracking-widest uppercase">veya</span>
-            <div className="flex-grow border-t border-zinc-800/80"></div>
+            <div className="divider" style={{ margin: '1.25rem 0' }}>veya</div>
+
+            <button
+              type="button"
+              onClick={handleQuickDemoLogin}
+              className="btn btn-glow-orange"
+              style={{ width: '100%' }}
+            >
+              <Zap size={16} />
+              Tek Tıkla Demo Girişi
+              <ArrowRight size={14} />
+            </button>
           </div>
-
-          <Button
-            type="button"
-            variant="glass"
-            onClick={handleQuickDemoLogin}
-            className="w-full py-2.5 text-xs text-orange border-[rgba(249,115,22,0.3)] bg-orange/5 font-semibold flex items-center justify-center gap-2"
-          >
-            Hızlı Test: Tek Tıkla Demo Giriş <ArrowRight size={14} />
-          </Button>
         </div>
 
-        <div className="flex justify-between items-center text-[10px] text-faint font-bold uppercase tracking-widest px-2">
-          <span className="flex items-center gap-1">
-            <ShieldCheck size={12} className="text-success" /> Yerel Sandbox Güvencesi
+        {/* Security footer */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem',
+          fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em',
+          textTransform: 'uppercase', color: 'var(--text-faint)',
+        }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+            <ShieldCheck size={12} style={{ color: 'var(--status-success)' }} />
+            Yerel Sandbox
           </span>
-          <span>
-            🔒 256-bit Veri Güvenliği
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+            <Lock size={12} />
+            256-bit Güvenlik
           </span>
         </div>
       </div>

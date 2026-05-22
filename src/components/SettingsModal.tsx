@@ -22,6 +22,12 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
     setSelectedCurrency(localStorage.getItem('rrs_setting_currency') || 'USD');
   }, []);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
   const handleSaveSettings = () => {
     localStorage.setItem('rrs_setting_company', companyName);
     localStorage.setItem('rrs_setting_tone', replyTone);
@@ -36,15 +42,15 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
     label: string;
     danger?: boolean;
   }> = [
-    { key: 'general', icon: <Settings size={14} />, label: 'Genel Ayarlar' },
-    { key: 'subscription', icon: <CreditCard size={14} />, label: 'Abonelik' },
-    { key: 'cancel', icon: <AlertTriangle size={14} />, label: 'İptal & İade', danger: true },
+    { key: 'general', icon: <Settings size={15} />, label: 'Genel Ayarlar' },
+    { key: 'subscription', icon: <CreditCard size={15} />, label: 'Abonelik' },
+    { key: 'cancel', icon: <AlertTriangle size={15} />, label: 'İptal & İade', danger: true },
   ];
 
   const renderGeneral = () => (
     <div className="stack-md animate-in">
       <div>
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+        <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.375rem' }}>
           Genel Sistem Ayarları
         </h3>
         <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
@@ -61,8 +67,8 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
       <div className="form-group">
         <label className="form-label">Varsayılan İletişim Tonu</label>
         <select value={replyTone} onChange={(e) => setReplyTone(e.target.value)} className="form-select">
-          <option value="formal">Kurumsal & Ciddi (Varsayılan)</option>
-          <option value="friendly">Samimi & Yakın</option>
+          <option value="formal">Kurumsal &amp; Ciddi (Varsayılan)</option>
+          <option value="friendly">Samimi &amp; Yakın</option>
         </select>
       </div>
 
@@ -95,6 +101,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         background: 'rgba(5,6,15,0.5)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--r-sm)',
+        gap: '1rem',
       }}>
         <div>
           <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.1rem' }}>
@@ -129,7 +136,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   const renderSubscription = () => (
     <div className="stack-md animate-in">
       <div>
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+        <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.375rem' }}>
           Abonelik ve Limit Bilgisi
         </h3>
         <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
@@ -217,7 +224,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
           <AlertTriangle size={24} style={{ color: 'var(--status-warning)' }} />
         </div>
         <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
-          Aboneliği İptal Et & İade İste
+          Aboneliği İptal Et &amp; İade İste
         </h3>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.65 }}>
           Ayrıldığınızı görmek bizi üzer. Hizmetimizi geliştirebilmemiz için lütfen ayrılma nedeninizi paylaşın.
@@ -338,87 +345,78 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   );
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-panel" style={{ maxWidth: '600px' }}>
+    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal-panel settings-modal-panel">
 
         {/* Header */}
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-            <Settings size={18} style={{ color: 'var(--accent-primary)' }} />
-            <h2 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-main)' }}>
-              Hesap & Ayarlar
-            </h2>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: 'var(--r-sm)',
+              background: 'rgba(13,211,255,0.08)', border: '1px solid rgba(13,211,255,0.18)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <Settings size={16} style={{ color: 'var(--accent-primary)' }} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.2 }}>
+                Hesap &amp; Ayarlar
+              </h2>
+              <p style={{ fontSize: '0.7rem', color: 'var(--text-faint)', marginTop: '0.1rem' }}>
+                Sistem tercihlerinizi yönetin
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
             style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: 'var(--text-muted)', padding: '0.25rem',
+              background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', cursor: 'pointer',
+              color: 'var(--text-muted)', padding: '0',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: '32px', height: '32px', borderRadius: 'var(--r-xs)',
+              width: '36px', height: '36px', borderRadius: 'var(--r-sm)',
+              transition: 'all 0.15s ease', flexShrink: 0,
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)';
+              (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-main)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)';
+              (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)';
             }}
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
-        {/* Body: sidebar nav + content */}
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
-
-          {/* Left Nav */}
-          <div style={{
-            width: '168px',
-            flexShrink: 0,
-            borderRight: '1px solid var(--border)',
-            padding: '1rem 0.75rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.25rem',
-            background: 'rgba(0,0,0,0.2)',
-          }}>
-            {navItems.map((item) => (
-              <button
-                key={item.key}
-                onClick={() => { setActiveTab(item.key); setCancelStep(1); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '0.625rem',
-                  padding: '0.625rem 0.875rem',
-                  borderRadius: 'var(--r-xs)',
-                  fontSize: '0.8125rem', fontWeight: 600,
-                  cursor: 'pointer', border: 'none',
-                  width: '100%', textAlign: 'left',
-                  transition: 'all 0.15s ease',
-                  background: activeTab === item.key
-                    ? (item.danger ? 'rgba(255,208,67,0.08)' : 'rgba(13,211,255,0.08)')
-                    : 'transparent',
-                  color: activeTab === item.key
-                    ? (item.danger ? 'var(--status-warning)' : 'var(--text-main)')
-                    : 'var(--text-muted)',
-                  borderLeft: activeTab === item.key
-                    ? `2px solid ${item.danger ? 'var(--status-warning)' : 'var(--accent-primary)'}`
-                    : '2px solid transparent',
-                }}
-              >
-                {item.icon}
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Right Content */}
-          <div className="modal-body">
-            {activeTab === 'general' && renderGeneral()}
-            {activeTab === 'subscription' && renderSubscription()}
-            {activeTab === 'cancel' && (
-              <>
-                {cancelStep === 1 && renderCancelStep1()}
-                {cancelStep === 2 && renderCancelStep2()}
-                {cancelStep === 3 && renderCancelStep3()}
-              </>
-            )}
-          </div>
-
+        {/* Tab Nav — scrollable on mobile, sidebar on desktop */}
+        <div className="settings-tab-nav">
+          {navItems.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => { setActiveTab(item.key); setCancelStep(1); }}
+              className={`settings-tab-btn ${activeTab === item.key ? 'active' : ''} ${item.danger ? 'danger' : ''}`}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          ))}
         </div>
+
+        {/* Content */}
+        <div className="modal-body settings-modal-body">
+          {activeTab === 'general' && renderGeneral()}
+          {activeTab === 'subscription' && renderSubscription()}
+          {activeTab === 'cancel' && (
+            <>
+              {cancelStep === 1 && renderCancelStep1()}
+              {cancelStep === 2 && renderCancelStep2()}
+              {cancelStep === 3 && renderCancelStep3()}
+            </>
+          )}
+        </div>
+
       </div>
     </div>
   );

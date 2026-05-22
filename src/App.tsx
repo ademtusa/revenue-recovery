@@ -13,10 +13,7 @@ function App() {
   const [checkingSession, setCheckingSession] = useState(true);
 
   useEffect(() => {
-    // Initialize mock DB on startup
     initializeDB();
-
-    // Check active session
     const session = localStorage.getItem('rrs_active_session');
     if (session) {
       setUserEmail(session);
@@ -49,8 +46,14 @@ function App() {
 
   if (checkingSession) {
     return (
-      <div className="min-h-screen flex justify-center items-center bg-[#050814]">
-        <div className="w-10 h-10 border-4 border-zinc-900 border-t-blue-500 rounded-full animate-spin"></div>
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg)',
+      }}>
+        <div className="spinner spinner-lg" />
       </div>
     );
   }
@@ -62,18 +65,18 @@ function App() {
   return (
     <main>
       {appState === 'upload' && (
-        <UploadView 
-          onStartDiagnosis={startDiagnosis} 
-          userEmail={userEmail} 
-          onLogout={handleLogout} 
+        <UploadView
+          onStartDiagnosis={startDiagnosis}
+          userEmail={userEmail}
+          onLogout={handleLogout}
         />
       )}
       {appState === 'analyzing' && <LoadingEngine onComplete={showDiagnosis} />}
       {appState === 'diagnosis' && (
-        <DiagnosisView 
-          onReset={resetState} 
-          userEmail={userEmail} 
-          onLogout={handleLogout} 
+        <DiagnosisView
+          onReset={resetState}
+          userEmail={userEmail}
+          onLogout={handleLogout}
         />
       )}
     </main>
