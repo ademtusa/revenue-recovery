@@ -8,27 +8,18 @@ interface SettingsModalProps {
 
 export function SettingsModal({ onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<'general' | 'subscription' | 'cancel'>('general');
-  
-  // Cancellation steps
   const [cancelStep, setCancelStep] = useState(1);
   const [selectedReason, setSelectedReason] = useState('');
-
-  // General Settings State
-  const [companyName, setCompanyName] = useState('Creaizen');
+  const [companyName, setCompanyName] = useState('RRIO');
   const [replyTone, setReplyTone] = useState('formal');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    // Load general settings
-    const savedCompany = localStorage.getItem('rrs_setting_company') || 'Creaizen';
-    const savedTone = localStorage.getItem('rrs_setting_tone') || 'formal';
-    const savedCurrency = localStorage.getItem('rrs_setting_currency') || 'USD';
-    
-    setCompanyName(savedCompany);
-    setReplyTone(savedTone);
-    setSelectedCurrency(savedCurrency);
+    setCompanyName(localStorage.getItem('rrs_setting_company') || 'RRIO');
+    setReplyTone(localStorage.getItem('rrs_setting_tone') || 'formal');
+    setSelectedCurrency(localStorage.getItem('rrs_setting_currency') || 'USD');
   }, []);
 
   const handleSaveSettings = () => {
@@ -39,262 +30,385 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
     setTimeout(() => setIsSaved(false), 2000);
   };
 
-  const renderGeneralSettings = () => (
-    <div className="space-y-5 animate-in">
+  const navItems: Array<{
+    key: 'general' | 'subscription' | 'cancel';
+    icon: React.ReactNode;
+    label: string;
+    danger?: boolean;
+  }> = [
+    { key: 'general', icon: <Settings size={14} />, label: 'Genel Ayarlar' },
+    { key: 'subscription', icon: <CreditCard size={14} />, label: 'Abonelik' },
+    { key: 'cancel', icon: <AlertTriangle size={14} />, label: 'İptal & İade', danger: true },
+  ];
+
+  const renderGeneral = () => (
+    <div className="stack-md animate-in">
       <div>
-        <h3 className="text-lg font-bold text-white mb-1">Genel Sistem Ayarları</h3>
-        <p className="text-xs text-muted">Platform genelindeki varsayılan değerleri ve AI stüdyo tonunu özelleştirin.</p>
+        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+          Genel Sistem Ayarları
+        </h3>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+          Platform genelindeki varsayılan değerleri ve AI stüdyo tonunu özelleştirin.
+        </p>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label className="text-[10px] font-bold text-faint uppercase tracking-widest block mb-2">Firma Adınız</label>
-          <input 
-            type="text" 
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-            className="form-input bg-black/50 border border-zinc-800 rounded focus:border-primary w-full pl-3 text-sm py-2 text-white"
-          />
-        </div>
+      <div className="form-group">
+        <label className="form-label">Firma Adınız</label>
+        <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)}
+          className="form-input" />
+      </div>
 
-        <div>
-          <label className="text-[10px] font-bold text-faint uppercase tracking-widest block mb-2">Varsayılan İletişim Dili Tonu</label>
-          <select 
-            value={replyTone}
-            onChange={(e) => setReplyTone(e.target.value)}
-            className="form-select bg-black/50 border border-zinc-800 rounded focus:border-primary w-full text-sm py-2 text-white"
-          >
-            <option value="formal">Kurumsal & Ciddi (Varsayılan)</option>
-            <option value="friendly">Samimi & Yakın</option>
+      <div className="form-group">
+        <label className="form-label">Varsayılan İletişim Tonu</label>
+        <select value={replyTone} onChange={(e) => setReplyTone(e.target.value)} className="form-select">
+          <option value="formal">Kurumsal & Ciddi (Varsayılan)</option>
+          <option value="friendly">Samimi & Yakın</option>
+        </select>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="form-group">
+          <label className="form-label">Para Birimi</label>
+          <select value={selectedCurrency} onChange={(e) => setSelectedCurrency(e.target.value)} className="form-select">
+            <option value="USD">Dolar ($)</option>
+            <option value="EUR">Euro (€)</option>
+            <option value="TRY">Türk Lirası (₺)</option>
           </select>
         </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-[10px] font-bold text-faint uppercase tracking-widest block mb-2">Para Birimi</label>
-            <select 
-              value={selectedCurrency}
-              onChange={(e) => setSelectedCurrency(e.target.value)}
-              className="form-select bg-black/50 border border-zinc-800 rounded focus:border-primary w-full text-sm py-2 text-white"
-            >
-              <option value="USD">Dolar ($)</option>
-              <option value="EUR">Euro (€)</option>
-              <option value="TRY">Türk Lirası (₺)</option>
-            </select>
+        <div className="form-group">
+          <label className="form-label">Çalışma Prensibi</label>
+          <div style={{
+            background: 'rgba(5,6,15,0.7)', border: '1px solid var(--border)',
+            borderRadius: 'var(--r-sm)', padding: '0.75rem 1rem',
+            fontSize: '0.8125rem', color: 'var(--text-muted)', minHeight: '48px',
+            display: 'flex', alignItems: 'center',
+          }}>
+            Manuel-First Hybrid
           </div>
-          <div>
-            <label className="text-[10px] font-bold text-faint uppercase tracking-widest block mb-2">Çalışma Prensibi</label>
-            <div className="bg-zinc-950/60 border border-zinc-850 p-2 text-xs text-muted rounded mt-0.5">
-              Manuel-First Hybrid (AI Önerili)
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between pt-2">
-          <span className="text-xs text-muted">Kurtarma Uyarılarını Al:</span>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input 
-              type="checkbox" 
-              checked={notificationsEnabled}
-              onChange={(e) => setNotificationsEnabled(e.target.checked)}
-              className="sr-only peer" 
-            />
-            <div className="w-8 h-4 bg-zinc-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary"></div>
-          </label>
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 pt-4 border-t border-zinc-900">
+      {/* Notification toggle */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0.875rem 1rem',
+        background: 'rgba(5,6,15,0.5)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--r-sm)',
+      }}>
+        <div>
+          <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.1rem' }}>
+            Kurtarma Uyarıları
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            Kritik sızıntı tespitlerinde bildirim al
+          </div>
+        </div>
+        <label className="toggle-label">
+          <input type="checkbox" checked={notificationsEnabled}
+            onChange={(e) => setNotificationsEnabled(e.target.checked)} />
+          <div className="toggle-track">
+            <div className="toggle-thumb" />
+          </div>
+        </label>
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        display: 'flex', gap: '0.75rem', justifyContent: 'flex-end',
+        paddingTop: '1rem', borderTop: '1px solid var(--border)',
+      }}>
         <Button variant="outline" onClick={onClose}>Kapat</Button>
-        <Button variant="glow-blue" onClick={handleSaveSettings} className="gap-2">
-          <Save size={14} /> {isSaved ? 'Kaydedildi!' : 'Değişiklikleri Kaydet'}
+        <Button variant="glow-blue" onClick={handleSaveSettings}>
+          <Save size={14} /> {isSaved ? '✓ Kaydedildi!' : 'Değişiklikleri Kaydet'}
         </Button>
       </div>
     </div>
   );
 
-  const renderSubscriptionPlans = () => (
-    <div className="space-y-5 animate-in">
+  const renderSubscription = () => (
+    <div className="stack-md animate-in">
       <div>
-        <h3 className="text-lg font-bold text-white mb-1">Abonelik ve Limit Bilgisi</h3>
-        <p className="text-xs text-muted">Aktif paketinizi görüntüleyin ve diğer planları inceleyin.</p>
+        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+          Abonelik ve Limit Bilgisi
+        </h3>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+          Aktif paketinizi görüntüleyin ve diğer planları inceleyin.
+        </p>
       </div>
 
-      <div className="space-y-4">
-        {/* Active Plan Detail */}
-        <div className="premium-panel bg-primary/5 border-primary/20 p-4 relative overflow-hidden">
-          <div className="absolute top-2 right-2">
-            <span className="badge badge-success text-[8.5px] uppercase tracking-wider">Aktif Üyelik</span>
-          </div>
-          <span className="text-[10px] text-primary font-bold uppercase tracking-wider block">Mevcut Plan</span>
-          <span className="text-xl font-extrabold text-white mt-1 block">RRS Pro Analist Paketi</span>
-          <span className="text-xs text-muted block mt-1">Sonraki Yenileme: 15 Haziran 2026 ($99 / Ay)</span>
+      {/* Active plan */}
+      <div style={{
+        padding: '1.25rem',
+        background: 'rgba(13,211,255,0.04)',
+        border: '1px solid rgba(13,211,255,0.18)',
+        borderRadius: 'var(--r-md)',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', top: '0.875rem', right: '0.875rem' }}>
+          <span className="badge badge-success">Aktif Üyelik</span>
         </div>
-
-        {/* Tier Lists */}
-        <div className="space-y-2">
-          <span className="text-[10px] text-faint font-bold uppercase tracking-widest block mb-2">Tüm Paketler</span>
-          
-          <div className="bg-zinc-950/40 border border-zinc-900 p-3 rounded-lg flex justify-between items-center">
-            <div>
-              <div className="text-xs font-bold text-white">Starter Plan</div>
-              <div className="text-[10px] text-muted">Maksimum 10 Şirket Teşhisi, Manuel Şablonlar</div>
-            </div>
-            <div className="text-right">
-              <div className="text-xs font-bold text-white">$29 / Ay</div>
-            </div>
-          </div>
-
-          <div className="bg-primary/5 border border-primary/20 p-3 rounded-lg flex justify-between items-center">
-            <div>
-              <div className="text-xs font-bold text-white">Pro Plan (Mevcut)</div>
-              <div className="text-[10px] text-muted">Sınırsız Şirket, AI Yanıt Stüdyosu, PDF Raporlama</div>
-            </div>
-            <div className="text-right">
-              <div className="text-xs font-bold text-primary">$99 / Ay</div>
-            </div>
-          </div>
-
-          <div className="bg-zinc-950/40 border border-zinc-900 p-3 rounded-lg flex justify-between items-center">
-            <div>
-              <div className="text-xs font-bold text-white">Enterprise VPS Plan</div>
-              <div className="text-[10px] text-muted">Özel Veritabanı, Entegrasyon API, Dedicated VPS Kurulumu</div>
-            </div>
-            <div className="text-right">
-              <div className="text-xs font-bold text-white">İletişime Geçin</div>
-            </div>
-          </div>
-        </div>
+        <span style={{
+          display: 'block', fontSize: '0.65rem', fontWeight: 700,
+          letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent-primary)',
+          marginBottom: '0.375rem',
+        }}>
+          Mevcut Plan
+        </span>
+        <span style={{ display: 'block', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+          RRS Pro Analist Paketi
+        </span>
+        <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+          Sonraki Yenileme: 15 Haziran 2026 ($99 / Ay)
+        </span>
       </div>
 
-      <div className="pt-4 border-t border-zinc-900 flex justify-end">
+      {/* Plan list */}
+      <div className="stack-xs">
+        <span style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
+          Tüm Paketler
+        </span>
+
+        {[
+          { name: 'Starter Plan', desc: 'Maks 10 Şirket Teşhisi, Manuel Şablonlar', price: '$29 / Ay', active: false },
+          { name: 'Pro Plan', desc: 'Sınırsız Şirket, AI Yanıt Stüdyosu, PDF Raporlama', price: '$99 / Ay', active: true },
+          { name: 'Enterprise VPS', desc: 'Özel Veritabanı, Entegrasyon API, Dedicated VPS', price: 'İletişime Geçin', active: false },
+        ].map((plan) => (
+          <div key={plan.name} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '0.875rem 1rem',
+            background: plan.active ? 'rgba(13,211,255,0.04)' : 'rgba(5,6,15,0.5)',
+            border: `1px solid ${plan.active ? 'rgba(13,211,255,0.18)' : 'var(--border)'}`,
+            borderRadius: 'var(--r-sm)',
+            gap: '1rem',
+          }}>
+            <div>
+              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.15rem' }}>
+                {plan.name} {plan.active && <span className="badge badge-primary" style={{ fontSize: '0.6rem', marginLeft: '0.375rem' }}>Aktif</span>}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{plan.desc}</div>
+            </div>
+            <div style={{
+              fontSize: '0.875rem', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0,
+              color: plan.active ? 'var(--accent-primary)' : 'var(--text-main)',
+            }}>
+              {plan.price}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ paddingTop: '0.75rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
         <Button variant="outline" onClick={onClose}>Kapat</Button>
       </div>
     </div>
   );
 
   const renderCancelStep1 = () => (
-    <div className="space-y-6 animate-in">
-      <div className="text-center">
-        <div className="w-12 h-12 rounded-full bg-[rgba(249,115,22,0.1)] text-orange-500 mx-auto flex items-center justify-center mb-4">
-          <AlertTriangle size={24} />
+    <div className="stack-md animate-in">
+      <div style={{ textAlign: 'center' }}>
+        <div style={{
+          width: '56px', height: '56px', borderRadius: '50%',
+          background: 'rgba(255,208,67,0.1)', border: '1px solid rgba(255,208,67,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 1rem',
+        }}>
+          <AlertTriangle size={24} style={{ color: 'var(--status-warning)' }} />
         </div>
-        <h3 className="text-xl font-bold mb-2">Aboneliği İptal Et & İade İste</h3>
-        <p className="text-sm text-muted">Ayrıldığınızı görmek bizi üzer. Hizmetimizi geliştirebilmemiz için lütfen ayrılma nedeninizi paylaşın.</p>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+          Aboneliği İptal Et & İade İste
+        </h3>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.65 }}>
+          Ayrıldığınızı görmek bizi üzer. Hizmetimizi geliştirebilmemiz için lütfen ayrılma nedeninizi paylaşın.
+        </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="stack-xs">
         {['Fiyat çok yüksek', 'İstediğim sonucu alamadım', 'Sistemi karmaşık buldum', 'Sadece denemek istemiştim'].map((reason) => (
-          <label key={reason} className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${selectedReason === reason ? 'border-primary bg-[rgba(59,130,246,0.1)]' : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-700'}`}>
-            <input 
-              type="radio" 
-              name="reason" 
-              value={reason} 
-              className="hidden"
+          <label key={reason} style={{
+            display: 'flex', alignItems: 'center', gap: '0.875rem',
+            padding: '0.875rem 1rem',
+            borderRadius: 'var(--r-sm)',
+            border: `1px solid ${selectedReason === reason ? 'rgba(13,211,255,0.3)' : 'var(--border)'}`,
+            background: selectedReason === reason ? 'rgba(13,211,255,0.06)' : 'rgba(5,6,15,0.5)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          }}>
+            <input type="radio" name="reason" value={reason}
               checked={selectedReason === reason}
               onChange={() => setSelectedReason(reason)}
-            />
-            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${selectedReason === reason ? 'border-primary' : 'border-gray-500'}`}>
-              {selectedReason === reason && <div className="w-2 h-2 rounded-full bg-primary" />}
+              style={{ display: 'none' }} />
+            <div style={{
+              width: '18px', height: '18px', borderRadius: '50%', flexShrink: 0,
+              border: `2px solid ${selectedReason === reason ? 'var(--accent-primary)' : 'var(--border-hover)'}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {selectedReason === reason && (
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-primary)' }} />
+              )}
             </div>
-            <span className="text-sm font-medium text-white">{reason}</span>
+            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-main)' }}>{reason}</span>
           </label>
         ))}
       </div>
 
-      <div className="flex gap-3 pt-4 border-t border-zinc-900">
-        <Button variant="outline" className="flex-1" onClick={onClose}>Vazgeç</Button>
-        <Button variant="glow-orange" className="flex-1" disabled={!selectedReason} onClick={() => setCancelStep(2)}>Devam Et</Button>
+      <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
+        <Button variant="outline" style={{ flex: 1 }} onClick={onClose}>Vazgeç</Button>
+        <Button variant="glow-orange" style={{ flex: 1 }} disabled={!selectedReason} onClick={() => setCancelStep(2)}>
+          Devam Et <ArrowRight size={14} />
+        </Button>
       </div>
     </div>
   );
 
   const renderCancelStep2 = () => (
-    <div className="space-y-6 animate-in">
-      <div className="text-center">
-        <h3 className="text-xl font-bold mb-2 text-white">Belki fikrinizi değiştirirsiniz?</h3>
-        <p className="text-sm text-muted font-normal">Aboneliğinizi iptal etmek yerine size özel bir kurtarma teklifimiz var.</p>
+    <div className="stack-md animate-in">
+      <div style={{ textAlign: 'center' }}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+          Belki fikrinizi değiştirirsiniz?
+        </h3>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+          Aboneliğinizi iptal etmek yerine size özel bir teklif var.
+        </p>
       </div>
 
-      <div className="premium-panel bg-[rgba(16,185,129,0.05)] border-[rgba(16,185,129,0.2)] p-6 text-center">
-        <div className="inline-flex p-3 bg-emerald-500/10 rounded-full text-emerald-400 mb-3">
-          <Heart size={24} />
+      <div style={{
+        padding: '1.5rem', textAlign: 'center',
+        background: 'rgba(56,242,150,0.04)',
+        border: '1px solid rgba(56,242,150,0.18)',
+        borderRadius: 'var(--r-md)',
+      }}>
+        <div style={{
+          width: '52px', height: '52px', borderRadius: '50%',
+          background: 'rgba(56,242,150,0.1)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          margin: '0 auto 1rem',
+        }}>
+          <Heart size={24} style={{ color: 'var(--status-success)' }} />
         </div>
-        <h4 className="text-emerald-400 font-bold text-lg mb-2">2 Ay Ücretsiz Pro Üyelik</h4>
-        <p className="text-sm text-muted mb-6 leading-relaxed">İptal işlemini durdurun ve sistemi 2 ay daha ücretsiz, tüm özellikleriyle kullanın. Herhangi bir kart ücreti çekilmeyecektir.</p>
-        <Button variant="glow-green" className="w-full" onClick={onClose}>
+        <h4 style={{ fontSize: '1.125rem', fontWeight: 800, color: 'var(--status-success)', marginBottom: '0.625rem' }}>
+          2 Ay Ücretsiz Pro Üyelik
+        </h4>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
+          İptal işlemini durdurun ve sistemi 2 ay daha ücretsiz kullanın. Herhangi bir kart ücreti çekilmeyecektir.
+        </p>
+        <Button variant="glow-green" style={{ width: '100%' }} onClick={onClose}>
           Teklifi Kabul Et ve Devam Et
         </Button>
       </div>
 
-      <div className="pt-4 border-t border-zinc-900">
-        <button className="w-full text-center text-xs text-muted hover:text-white transition-colors" onClick={() => setCancelStep(3)}>
-          Hayır, teşekkürler. İptal ve İade işlemine devam et <ArrowRight size={14} className="inline ml-1" />
+      <div style={{ paddingTop: '0.5rem', borderTop: '1px solid var(--border)', textAlign: 'center' }}>
+        <button
+          onClick={() => setCancelStep(3)}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: '0.8125rem', color: 'var(--text-muted)',
+            display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+            padding: '0.5rem',
+          }}
+        >
+          Hayır, iptal ve iade işlemine devam et <ArrowRight size={13} />
         </button>
       </div>
     </div>
   );
 
   const renderCancelStep3 = () => (
-    <div className="space-y-6 animate-in text-center py-6">
-      <div className="w-16 h-16 rounded-full bg-[rgba(16,185,129,0.1)] text-emerald-400 mx-auto flex items-center justify-center mb-6">
-        <CheckCircle size={32} />
+    <div className="stack-md animate-in" style={{ textAlign: 'center', padding: '1rem 0' }}>
+      <div style={{
+        width: '64px', height: '64px', borderRadius: '50%',
+        background: 'rgba(56,242,150,0.1)',
+        border: '1px solid rgba(56,242,150,0.2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        margin: '0 auto',
+      }}>
+        <CheckCircle size={32} style={{ color: 'var(--status-success)' }} />
       </div>
-      <h3 className="text-2xl font-bold mb-2 text-white">İptal ve İade Talebi Alındı</h3>
-      <p className="text-sm text-muted mb-8 leading-relaxed">
-        İade talebiniz 3 adımda kolayca işleme alınmıştır. Bankanızın süreçlerine bağlı olarak ücret iadesi 3-5 iş günü içerisinde kartınıza yansıyacaktır.
+      <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-main)' }}>
+        İptal ve İade Talebi Alındı
+      </h3>
+      <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.65, maxWidth: '360px', margin: '0 auto' }}>
+        İade talebiniz işleme alınmıştır. Bankanızın süreçlerine bağlı olarak ücret iadesi 3-5 iş günü içerisinde kartınıza yansıyacaktır.
       </p>
-      <Button variant="outline" className="w-full" onClick={onClose}>Panoya Dön</Button>
+      <Button variant="outline" style={{ width: '100%', marginTop: '0.5rem' }} onClick={onClose}>
+        Panoya Dön
+      </Button>
     </div>
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="glass-panel w-full max-w-lg relative border-zinc-800">
-        
-        {/* Modal Header */}
-        <div className="flex justify-between items-center p-6 border-b border-zinc-900">
-          <div className="flex items-center gap-2">
-            <Settings className="text-primary" size={20} />
-            <h2 className="text-lg font-bold text-white tracking-tight">Hesap & Ayarlar</h2>
+    <div className="modal-overlay">
+      <div className="modal-panel" style={{ maxWidth: '600px' }}>
+
+        {/* Header */}
+        <div className="modal-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <Settings size={18} style={{ color: 'var(--accent-primary)' }} />
+            <h2 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-main)' }}>
+              Hesap & Ayarlar
+            </h2>
           </div>
-          <button 
+          <button
             onClick={onClose}
-            className="text-muted hover:text-white transition-colors"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--text-muted)', padding: '0.25rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: '32px', height: '32px', borderRadius: 'var(--r-xs)',
+            }}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Modal Body Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-[160px_1fr]">
-          
-          {/* Left Navigation Bar */}
-          <div className="flex md:flex-col border-b md:border-b-0 md:border-r border-zinc-900 p-4 gap-1">
-            <button 
-              onClick={() => setActiveTab('general')}
-              className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded transition-all text-left w-full ${activeTab === 'general' ? 'bg-primary/10 text-white border-l-2 border-primary' : 'text-muted hover:text-white'}`}
-            >
-              <Settings size={14} /> Genel Ayarlar
-            </button>
-            <button 
-              onClick={() => setActiveTab('subscription')}
-              className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded transition-all text-left w-full ${activeTab === 'subscription' ? 'bg-primary/10 text-white border-l-2 border-primary' : 'text-muted hover:text-white'}`}
-            >
-              <CreditCard size={14} /> Abonelik Planları
-            </button>
-            <button 
-              onClick={() => setActiveTab('cancel')}
-              className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded transition-all text-left w-full ${activeTab === 'cancel' ? 'bg-orange-550/10 text-orange border-l-2 border-orange' : 'text-muted hover:text-white'}`}
-            >
-              <AlertTriangle size={14} /> Abonelik İptali
-            </button>
+        {/* Body: sidebar nav + content */}
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden', minHeight: 0 }}>
+
+          {/* Left Nav */}
+          <div style={{
+            width: '168px',
+            flexShrink: 0,
+            borderRight: '1px solid var(--border)',
+            padding: '1rem 0.75rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.25rem',
+            background: 'rgba(0,0,0,0.2)',
+          }}>
+            {navItems.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => { setActiveTab(item.key); setCancelStep(1); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.625rem',
+                  padding: '0.625rem 0.875rem',
+                  borderRadius: 'var(--r-xs)',
+                  fontSize: '0.8125rem', fontWeight: 600,
+                  cursor: 'pointer', border: 'none',
+                  width: '100%', textAlign: 'left',
+                  transition: 'all 0.15s ease',
+                  background: activeTab === item.key
+                    ? (item.danger ? 'rgba(255,208,67,0.08)' : 'rgba(13,211,255,0.08)')
+                    : 'transparent',
+                  color: activeTab === item.key
+                    ? (item.danger ? 'var(--status-warning)' : 'var(--text-main)')
+                    : 'var(--text-muted)',
+                  borderLeft: activeTab === item.key
+                    ? `2px solid ${item.danger ? 'var(--status-warning)' : 'var(--accent-primary)'}`
+                    : '2px solid transparent',
+                }}
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            ))}
           </div>
 
-          {/* Right Content Panel */}
-          <div className="p-6">
-            {activeTab === 'general' && renderGeneralSettings()}
-            {activeTab === 'subscription' && renderSubscriptionPlans()}
+          {/* Right Content */}
+          <div className="modal-body">
+            {activeTab === 'general' && renderGeneral()}
+            {activeTab === 'subscription' && renderSubscription()}
             {activeTab === 'cancel' && (
               <>
                 {cancelStep === 1 && renderCancelStep1()}
@@ -305,7 +419,6 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
           </div>
 
         </div>
-
       </div>
     </div>
   );
