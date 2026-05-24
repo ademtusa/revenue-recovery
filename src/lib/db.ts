@@ -55,6 +55,8 @@ export const initializeDB = () => {
         category: 'ABANDONED_OPPORTUNITY',
         clientName: 'TechCorp A.Ş.',
         contactPerson: 'Ahmet Yılmaz (CEO)',
+        clientEmail: 'ahmet.yilmaz@techcorp.com.tr',
+        clientPhone: '+905321234567',
         context: 'E-Ticaret Altyapı Yenilemesi',
         revenueImpact: 4500,
         urgency: 'CRITICAL',
@@ -79,6 +81,8 @@ export const initializeDB = () => {
         category: 'SUBSCRIPTION_DECAY',
         clientName: 'Lumina Mimarlık',
         contactPerson: 'Selin Kaya (Kurucu)',
+        clientEmail: 'selin@luminamimarlik.com',
+        clientPhone: '+905449876543',
         context: 'Pro Danışmanlık Üyeliği',
         revenueImpact: 1200,
         urgency: 'MEDIUM',
@@ -102,6 +106,8 @@ export const initializeDB = () => {
         category: 'COLD_RELATIONSHIP',
         clientName: 'Nexus Lojistik',
         contactPerson: 'Caner Öz (Operasyon Müdürü)',
+        clientEmail: 'caner.oz@nexuslojistik.com',
+        clientPhone: '+905557654321',
         context: 'Geçmiş Alışveriş (2025 Q1)',
         revenueImpact: 8500,
         urgency: 'LOW',
@@ -135,29 +141,44 @@ export const saveRecords = async (records: IntelligenceRecord[]): Promise<void> 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
 };
 
-export const addRecordsFromCSV = async (parsedData: any[]): Promise<void> => {
+export interface RawCSVRow {
+  Company?: string;
+  Revenue?: string;
+  LastContactDays?: string;
+  Contact?: string;
+  Project?: string;
+  Email?: string;
+  Phone?: string;
+  'E-Posta'?: string;
+  eposta?: string;
+  Mail?: string;
+  Telefon?: string;
+  tel?: string;
+  [key: string]: string | undefined;
+}
+
+export const addRecordsFromCSV = async (parsedData: RawCSVRow[]): Promise<void> => {
   const current = await getRecords();
   
   // Transform raw CSV data into Event-Driven IntelligenceRecords
   const newRecords: IntelligenceRecord[] = parsedData
     .filter(row => row.Company && row.Revenue) 
     .map(row => {
-      const days = parseInt(row.LastContactDays) || 30;
-      const revenue = parseInt(row.Revenue) || 0;
+      const days = parseInt(row.LastContactDays || '') || 30;
+      const revenue = parseInt(row.Revenue || '') || 0;
       
-      let category: Category = 'COLD_RELATIONSHIP';
-      let urgency: 'CRITICAL' | 'MEDIUM' | 'LOW' = 'LOW';
-      let subCause = '';
-      let strategy = '';
-      let draftMessage = '';
-      let priorityScore = 50;
+      let category: Category;
+      let urgency: 'CRITICAL' | 'MEDIUM' | 'LOW';
+      let subCause: string;
+      let strategy: string;
+      let draftMessage: string;
       const eventHistory: IntelligenceEvent[] = [];
       
       // Calculate dynamic priority score
       // High revenue + high days without contact = high priority
       const revenueFactor = Math.min(revenue / 100, 50); // max 50 points from ciro
       const daysFactor = Math.min(days / 6, 50); // max 50 points from waiting time
-      priorityScore = Math.round(revenueFactor + daysFactor);
+      const priorityScore = Math.round(revenueFactor + daysFactor);
 
       if (days > 180) {
         category = 'COLD_RELATIONSHIP';
@@ -209,7 +230,7 @@ export const addRecordsFromCSV = async (parsedData: any[]): Promise<void> => {
       return {
         id: uuidv4(),
         category,
-        clientName: row.Company,
+        clientName: row.Company || 'Bilinmeyen Firma',
         contactPerson: row.Contact || 'Bilinmiyor',
         clientEmail: email,
         clientPhone: phone,

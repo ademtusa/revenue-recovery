@@ -1,25 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { UploadView } from './views/UploadView';
 import { LoadingEngine } from './views/LoadingEngine';
 import { DiagnosisView } from './views/DiagnosisView';
 import { AuthView } from './views/AuthView';
+import { PipelineView } from './views/PipelineView';
 import { initializeDB } from './lib/db';
 
-type AppState = 'upload' | 'analyzing' | 'diagnosis';
+type AppState = 'upload' | 'analyzing' | 'diagnosis' | 'pipeline';
 
 function App() {
   const [appState, setAppState] = useState<AppState>('upload');
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [checkingSession, setCheckingSession] = useState(true);
-
-  useEffect(() => {
+  const [userEmail, setUserEmail] = useState<string | null>(() => {
     initializeDB();
-    const session = localStorage.getItem('rrs_active_session');
-    if (session) {
-      setUserEmail(session);
-    }
-    setCheckingSession(false);
-  }, []);
+    return localStorage.getItem('rrs_active_session');
+  });
 
   const handleAuthSuccess = (email: string) => {
     localStorage.setItem('rrs_active_session', email);
@@ -40,23 +34,13 @@ function App() {
     setAppState('diagnosis');
   };
 
+  const showPipeline = () => {
+    setAppState('pipeline');
+  };
+
   const resetState = () => {
     setAppState('upload');
   };
-
-  if (checkingSession) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'var(--bg)',
-      }}>
-        <div className="spinner spinner-lg" />
-      </div>
-    );
-  }
 
   if (!userEmail) {
     return <AuthView onAuthSuccess={handleAuthSuccess} />;
@@ -74,6 +58,15 @@ function App() {
       {appState === 'analyzing' && <LoadingEngine onComplete={showDiagnosis} />}
       {appState === 'diagnosis' && (
         <DiagnosisView
+          onReset={resetState}
+          userEmail={userEmail}
+          onLogout={handleLogout}
+          onNavigatePipeline={showPipeline}
+        />
+      )}
+      {appState === 'pipeline' && (
+        <PipelineView
+          onNavigateDiagnosis={showDiagnosis}
           onReset={resetState}
           userEmail={userEmail}
           onLogout={handleLogout}

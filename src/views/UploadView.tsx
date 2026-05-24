@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
 import {
   UploadCloud, Mail, Database, ShieldCheck, Search, Rocket,
-  DollarSign, Calculator, AlertTriangle, ArrowDown, Cpu, LogOut, User
+  DollarSign, Calculator, AlertTriangle, ArrowDown, Cpu, LogOut, User, Download
 } from 'lucide-react';
 import Papa from 'papaparse';
 import { addRecordsFromCSV } from '../lib/db';
+import type { RawCSVRow } from '../lib/db';
 import { GoogleOAuthModal } from '../components/GoogleOAuthModal';
 
 interface UploadViewProps {
@@ -33,7 +34,7 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
-        await addRecordsFromCSV(results.data);
+        await addRecordsFromCSV(results.data as RawCSVRow[]);
         onStartDiagnosis();
       },
       error: (error: Error) => {
@@ -58,6 +59,27 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
     ];
     await addRecordsFromCSV(demoCSV);
     onStartDiagnosis();
+  };
+
+  const handleDownloadTemplate = () => {
+    const header = 'Company,Contact,Project,Revenue,LastContactDays,Email,Phone';
+    const rows = [
+      '"Apex Teknoloji A.Ş.","Mert Aksoy (CEO)","Yapay Zeka Danışmanlığı",9800,45,mert@apextek.com.tr,+905321234567',
+      '"Nova Retail A.Ş.","Ebru Şahin (CFO)","CRM Lisansı Yenileme",3500,15,ebru@novaretail.com,+905449876543',
+      '"Atlas Bilişim","Burak Yalçın (CTO)","Yıllık Bakım Anlaşması",5400,12,burak@atlasbilisim.com,+905557654321',
+      '"Karya Teknoloji","Deniz Eren (Kurucu)","Mobil Uygulama Arayüzyüzü",12000,210,deniz@karya.io,',
+      '"Vortex Global","Hakan Çelik (Direktör)","Bulut Altyapı Desteği",1600,120,hakan@vortexglobal.com,+905554567890',
+    ];
+    const csvContent = [header, ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'rrio_musteri_sablonu.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const scrollToUpload = () => {
@@ -439,6 +461,36 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
                 }}>
                   CSV
                 </div>
+              </button>
+            </div>
+
+            {/* CSV Template Download Helper */}
+            <div style={{
+              textAlign: 'center',
+              paddingTop: '0.375rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.375rem',
+              flexWrap: 'wrap',
+            }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-faint)' }}>
+                CSV kolonları hakkında bilgi almak için:
+              </span>
+              <button
+                onClick={handleDownloadTemplate}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: '0.72rem', fontWeight: 700,
+                  color: 'var(--accent-primary)',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
+                  padding: '0.2rem 0',
+                  textDecoration: 'underline',
+                  textDecorationColor: 'rgba(13,211,255,0.35)',
+                  textUnderlineOffset: '2px',
+                }}
+              >
+                <Download size={11} /> Örnek CSV Şablonu İndir
               </button>
             </div>
           </div>

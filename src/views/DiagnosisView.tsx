@@ -2,20 +2,40 @@ import { useState, useEffect } from 'react';
 import {
   DollarSign, Download, Clock, Target, Users, Zap, CheckCircle,
   Activity, MessageSquare, AlertCircle, Award, XCircle, Check,
-  Settings, Cpu, Mail, ShieldAlert, LogOut, ArrowRight
+  Settings, Cpu, Mail, ShieldAlert, LogOut, ArrowRight, Phone
 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { SettingsModal } from '../components/SettingsModal';
 import { getRecords, updateRecord, saveLeadCapture, getLeadCaptures } from '../lib/db';
 import type { IntelligenceRecord, Category, ActionType, OutcomeType, LeadCaptureRecord } from '../lib/db';
 
+const Linkedin = ({ size = 16, className = "" }: { size?: number; className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect width="4" height="12" x="2" y="9" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+);
+
 interface DiagnosisViewProps {
   onReset: () => void;
   userEmail: string;
   onLogout: () => void;
+  onNavigatePipeline: () => void;
 }
 
-export function DiagnosisView({ onReset, userEmail, onLogout }: DiagnosisViewProps) {
+export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline }: DiagnosisViewProps) {
   const [activeView, setActiveView] = useState<'diagnose' | 'outcomes'>('diagnose');
   const [activeTab, setActiveTab] = useState<Category>('ABANDONED_OPPORTUNITY');
   const [records, setRecords] = useState<IntelligenceRecord[]>([]);
@@ -23,7 +43,9 @@ export function DiagnosisView({ onReset, userEmail, onLogout }: DiagnosisViewPro
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
 
-  const [isAutomationActive, setIsAutomationActive] = useState(false);
+  const [isAutomationActive, setIsAutomationActive] = useState(() => {
+    return localStorage.getItem('rrs_automation_active') === 'true';
+  });
   const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [leadEmail, setLeadEmail] = useState('');
   const [isLeadCaptured, setIsLeadCaptured] = useState(false);
@@ -31,7 +53,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout }: DiagnosisViewPro
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'PENDING' | 'ACTION_TAKEN' | 'CLOSED'>('ALL');
   const [sortBy, setSortBy] = useState<'PRIORITY_DESC' | 'REVENUE_DESC' | 'DATE_DESC'>('PRIORITY_DESC');
 
-  const [activeAction, setActiveAction] = useState<{ id: string; type: 'email' | 'whatsapp' } | null>(null);
+  const [activeAction, setActiveAction] = useState<{ id: string; type: 'email' | 'whatsapp' | 'phone' | 'linkedin' } | null>(null);
   const [recipientEmail, setRecipientEmail] = useState('');
   const [recipientPhone, setRecipientPhone] = useState('');
   const [editedSubject, setEditedSubject] = useState('');
@@ -39,12 +61,6 @@ export function DiagnosisView({ onReset, userEmail, onLogout }: DiagnosisViewPro
 
   const [selectedOutcome, setSelectedOutcome] = useState<Record<string, OutcomeType>>({});
   const [draftTones, setDraftTones] = useState<Record<string, 'formal' | 'friendly'>>({});
-
-  useEffect(() => {
-    loadData();
-    const savedAuto = localStorage.getItem('rrs_automation_active');
-    if (savedAuto === 'true') setIsAutomationActive(true);
-  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -55,12 +71,41 @@ export function DiagnosisView({ onReset, userEmail, onLogout }: DiagnosisViewPro
     setLoading(false);
   };
 
+  useEffect(() => {
+    let active = true;
+    Promise.all([getRecords(), getLeadCaptures()]).then(([data, leads]) => {
+      if (active) {
+        setRecords(data);
+        setLeadCaptures(leads);
+        setLoading(false);
+      }
+    });
+    return () => { active = false; };
+  }, []);
+
   const handleAutomationToggle = (value: boolean) => {
     setIsAutomationActive(value);
     localStorage.setItem('rrs_automation_active', String(value));
   };
 
-  const startAction = (record: IntelligenceRecord, type: 'email' | 'whatsapp') => {
+  const handleQuickAction = async (record: IntelligenceRecord, type: 'phone' | 'linkedin') => {
+    const actionType: ActionType = type === 'phone' ? 'Telefonla Arandı' : 'Sosyal Ağ / LinkedIn';
+    await updateRecord(record.id, { status: 'ACTION_TAKEN', actionType });
+    if (type === 'phone' && record.clientPhone) {
+      window.open(`tel:${record.clientPhone}`, '_blank');
+    } else if (type === 'linkedin') {
+      const name = record.contactPerson.split('(')[0].trim();
+      const q = encodeURIComponent(`${name} ${record.clientName}`);
+      window.open(`https://www.linkedin.com/search/results/people/?keywords=${q}`, '_blank');
+    }
+    await loadData();
+  };
+
+  const startAction = (record: IntelligenceRecord, type: 'email' | 'whatsapp' | 'phone' | 'linkedin') => {
+    if (type === 'phone' || type === 'linkedin') {
+      handleQuickAction(record, type);
+      return;
+    }
     setActiveAction({ id: record.id, type });
     setRecipientEmail(record.clientEmail || '');
     setRecipientPhone(record.clientPhone || '');
@@ -228,7 +273,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout }: DiagnosisViewPro
       <table><thead><tr><th>Müşteri / Proje</th><th>Kategori</th><th>Aciliyet</th><th style="text-align:right;">Risk ($)</th><th style="text-align:right;">Durum</th></tr></thead>
       <tbody>${tableRows}</tbody></table>
       <div class="footer"><p>RRS Zeka Teşhis Motoru © ${new Date().getFullYear()}</p></div>
-      <script>window.onload=function(){window.print();setTimeout(function(){window.close();},500);}<\/script>
+      <script>window.onload=function(){window.print();setTimeout(function(){window.close();},500);}</script>
       </body></html>`);
     printWindow.document.close();
   };
@@ -329,6 +374,10 @@ export function DiagnosisView({ onReset, userEmail, onLogout }: DiagnosisViewPro
               onClick={onReset}>
               Yeniden Tara
             </button>
+            <button className="btn btn-glow-blue" style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}
+              onClick={onNavigatePipeline}>
+              📊 Pipeline
+            </button>
             <Button variant="glow-blue" className="btn-icon" onClick={() => setShowSettings(true)} title="Ayarlar">
               <Settings size={17} />
             </Button>
@@ -377,7 +426,81 @@ export function DiagnosisView({ onReset, userEmail, onLogout }: DiagnosisViewPro
           </button>
         </div>
 
+        {/* ── RECOVERY PROGRESS BANNER ── */}
+        {records.length > 0 && !loading && (
+          <div style={{
+            display: 'flex', alignItems: 'stretch', gap: '0',
+            marginBottom: '1.75rem',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--r-md)',
+            overflow: 'hidden',
+            background: 'rgba(5,6,15,0.6)',
+            backdropFilter: 'blur(12px)',
+          }}>
+            {/* Totals cell */}
+            <div style={{
+              padding: '0.875rem 1.25rem', flexShrink: 0,
+              borderRight: '1px solid var(--border)',
+              display: 'flex', flexDirection: 'column', justifyContent: 'center',
+            }}>
+              <div style={{ fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: '0.2rem' }}>
+                Toplam
+              </div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1 }}>
+                {records.length}
+              </div>
+            </div>
+
+            {/* Progress area */}
+            <div style={{ flex: 1, padding: '0.75rem 1.25rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '0.5rem' }}>
+              {/* Labels */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                  {[
+                    { color: 'var(--status-warning)', label: 'Bekleyen', count: records.filter(r => r.status === 'PENDING').length },
+                    { color: 'var(--accent-primary)', label: 'İşlemde', count: records.filter(r => r.status === 'ACTION_TAKEN').length },
+                    { color: 'var(--status-success)', label: 'Kapatıldı', count: records.filter(r => r.status === 'CLOSED').length },
+                  ].map(item => (
+                    <span key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', color: 'var(--text-faint)' }}>
+                      <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: item.color, display: 'inline-block', flexShrink: 0 }} />
+                      {item.label}: <strong style={{ color: item.color }}>{item.count}</strong>
+                    </span>
+                  ))}
+                </div>
+                <span style={{
+                  fontSize: '0.68rem', fontWeight: 800, whiteSpace: 'nowrap',
+                  color: records.filter(r => r.status === 'CLOSED').length > 0 ? 'var(--status-success)' : 'var(--text-faint)',
+                }}>
+                  %{Math.round((records.filter(r => r.status === 'CLOSED').length / records.length) * 100)} Tamamlandı
+                </span>
+              </div>
+
+              {/* Segmented progress bar */}
+              <div style={{ height: '5px', borderRadius: '3px', background: 'rgba(255,255,255,0.04)', overflow: 'hidden', display: 'flex' }}>
+                <div style={{
+                  height: '100%', background: 'var(--status-warning)',
+                  width: `${(records.filter(r => r.status === 'PENDING').length / records.length) * 100}%`,
+                  opacity: 0.75, transition: 'width 0.6s ease',
+                  borderRadius: '3px 0 0 3px',
+                }} />
+                <div style={{
+                  height: '100%', background: 'var(--accent-primary)',
+                  width: `${(records.filter(r => r.status === 'ACTION_TAKEN').length / records.length) * 100}%`,
+                  opacity: 0.75, transition: 'width 0.6s ease',
+                }} />
+                <div style={{
+                  height: '100%', background: 'var(--status-success)',
+                  width: `${(records.filter(r => r.status === 'CLOSED').length / records.length) * 100}%`,
+                  opacity: 0.85, transition: 'width 0.6s ease',
+                  borderRadius: '0 3px 3px 0',
+                }} />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── LIFECYCLE STEPPER ── */}
+
         <div className="lifecycle-wrap" style={{ marginBottom: '1.75rem' }}>
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -750,14 +873,22 @@ export function DiagnosisView({ onReset, userEmail, onLogout }: DiagnosisViewPro
                                 <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-faint)', marginBottom: '0.25rem' }}>
                                   Aksiyon Başlat
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.625rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                                   <Button variant="glow-blue" onClick={() => startAction(record, 'email')}
-                                    style={{ fontSize: '0.75rem', padding: '0.625rem 1rem', minHeight: '44px' }}>
-                                    <Mail size={14} /> E-Posta
+                                    style={{ fontSize: '0.72rem', padding: '0.5rem 0.75rem', minHeight: '40px' }}>
+                                    <Mail size={13} /> E-Posta
                                   </Button>
                                   <Button variant="glow-orange" onClick={() => startAction(record, 'whatsapp')}
-                                    style={{ fontSize: '0.75rem', padding: '0.625rem 1rem', minHeight: '44px' }}>
-                                    <MessageSquare size={14} /> WhatsApp
+                                    style={{ fontSize: '0.72rem', padding: '0.5rem 0.75rem', minHeight: '40px' }}>
+                                    <MessageSquare size={13} /> WhatsApp
+                                  </Button>
+                                  <Button variant="outline" onClick={() => startAction(record, 'phone')}
+                                    style={{ fontSize: '0.72rem', padding: '0.5rem 0.75rem', minHeight: '40px' }}>
+                                    <Phone size={13} /> Telefon
+                                  </Button>
+                                  <Button variant="outline" onClick={() => startAction(record, 'linkedin')}
+                                    style={{ fontSize: '0.72rem', padding: '0.5rem 0.75rem', minHeight: '40px', color: 'var(--status-info)', borderColor: 'rgba(167,139,250,0.3)' }}>
+                                    <Linkedin size={13} /> LinkedIn
                                   </Button>
                                 </div>
                               </div>
@@ -1100,6 +1231,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout }: DiagnosisViewPro
         </div>
 
       </div>
-    </>
-  );
+    </div>
+  </>
+);
 }

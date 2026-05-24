@@ -10,17 +10,11 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<'general' | 'subscription' | 'cancel'>('general');
   const [cancelStep, setCancelStep] = useState(1);
   const [selectedReason, setSelectedReason] = useState('');
-  const [companyName, setCompanyName] = useState('RRIO');
-  const [replyTone, setReplyTone] = useState('formal');
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const [companyName, setCompanyName] = useState(() => localStorage.getItem('rrs_setting_company') || 'RRIO');
+  const [replyTone, setReplyTone] = useState(() => localStorage.getItem('rrs_setting_tone') || 'formal');
+  const [selectedCurrency, setSelectedCurrency] = useState(() => localStorage.getItem('rrs_setting_currency') || 'USD');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
-
-  useEffect(() => {
-    setCompanyName(localStorage.getItem('rrs_setting_company') || 'RRIO');
-    setReplyTone(localStorage.getItem('rrs_setting_tone') || 'formal');
-    setSelectedCurrency(localStorage.getItem('rrs_setting_currency') || 'USD');
-  }, []);
 
   // Lock body scroll when modal is open
   useEffect(() => {
