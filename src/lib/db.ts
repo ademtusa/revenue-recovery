@@ -157,13 +157,30 @@ export interface RawCSVRow {
   [key: string]: string | undefined;
 }
 
-export const addRecordsFromCSV = async (parsedData: RawCSVRow[]): Promise<void> => {
+export type PlanType = 'FREE' | 'PRO' | 'AGENCY';
+
+export const getUserPlan = (): PlanType => {
+  return (localStorage.getItem('rrio_user_plan') as PlanType) || 'FREE';
+};
+
+export const setUserPlan = (plan: PlanType) => {
+  localStorage.setItem('rrio_user_plan', plan);
+};
+
+export const addRecordsFromCSV = async (parsedData: RawCSVRow[]): Promise<{ recordsSaved: number; limitHit: boolean }> => {
   const current = await getRecords();
+  const userPlan = getUserPlan();
   
+  let dataToProcess = parsedData.filter(row => row.Company && row.Revenue);
+  let limitHit = false;
+
+  if (userPlan === 'FREE' && dataToProcess.length > 50) {
+    dataToProcess = dataToProcess.slice(0, 50);
+    limitHit = true;
+  }
+
   // Transform raw CSV data into Event-Driven IntelligenceRecords
-  const newRecords: IntelligenceRecord[] = parsedData
-    .filter(row => row.Company && row.Revenue) 
-    .map(row => {
+  const newRecords: IntelligenceRecord[] = dataToProcess.map(row => {
       const days = parseInt(row.LastContactDays || '') || 30;
       const revenue = parseInt(row.Revenue || '') || 0;
       
@@ -249,6 +266,7 @@ export const addRecordsFromCSV = async (parsedData: RawCSVRow[]): Promise<void> 
     });
 
   await saveRecords([...newRecords, ...current]);
+  return { recordsSaved: newRecords.length, limitHit };
 };
 
 export const updateRecord = async (id: string, updates: Partial<IntelligenceRecord>): Promise<void> => {

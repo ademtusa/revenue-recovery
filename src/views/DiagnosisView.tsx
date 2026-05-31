@@ -6,8 +6,9 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { SettingsModal } from '../components/SettingsModal';
-import { getRecords, updateRecord, saveLeadCapture, getLeadCaptures } from '../lib/db';
-import type { IntelligenceRecord, Category, ActionType, OutcomeType, LeadCaptureRecord } from '../lib/db';
+import { PricingModal } from '../components/PricingModal';
+import { getRecords, updateRecord, saveLeadCapture, getLeadCaptures, getUserPlan } from '../lib/db';
+import type { IntelligenceRecord, Category, ActionType, OutcomeType, LeadCaptureRecord, PlanType } from '../lib/db';
 
 const Linkedin = ({ size = 16, className = "" }: { size?: number; className?: string }) => (
   <svg
@@ -42,6 +43,15 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
   const [leadCaptures, setLeadCaptures] = useState<LeadCaptureRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
+  
+  const [userPlan, setUserPlanState] = useState<PlanType>(getUserPlan());
+  const [limitHit, setLimitHit] = useState(false);
+
+  useEffect(() => {
+    setUserPlanState(getUserPlan());
+    setLimitHit(localStorage.getItem('rrio_limit_hit') === 'true');
+  }, []);
 
   const [isAutomationActive, setIsAutomationActive] = useState(() => {
     return localStorage.getItem('rrs_automation_active') === 'true';
@@ -315,7 +325,22 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
   return (
     <>
       {/* ── MODALS — rendered outside animate-in to prevent fixed positioning bug ── */}
-      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+      
+      {showPricing && (
+        <PricingModal 
+          onClose={() => setShowPricing(false)}
+          onPlanUpdated={() => {
+            setUserPlanState(getUserPlan());
+            setLimitHit(false); // They upgraded, limit is lifted
+            loadData();
+          }}
+        />
+      )}
 
       {showLeadCapture && (
         <div className="modal-overlay">
@@ -370,12 +395,18 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
           </div>
 
           <div className="topbar-actions">
+            {userPlan === 'FREE' && (
+              <button className="btn btn-glow-orange" style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem', fontWeight: 700 }}
+                onClick={() => setShowPricing(true)}>
+                🚀 Sınırsız Analiz İçin Yükselt
+              </button>
+            )}
             <button className="btn btn-outline" style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}
               onClick={onReset}>
               Yeniden Tara
             </button>
             <button className="btn btn-glow-blue" style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}
-              onClick={onNavigatePipeline}>
+              onClick={userPlan === 'FREE' ? () => alert('Gelişmiş Pipeline (Outcomes Center) sadece Pro planda kullanılabilir. Lütfen yükseltin.') : onNavigatePipeline}>
               📊 Pipeline
             </button>
             <Button variant="glow-blue" className="btn-icon" onClick={() => setShowSettings(true)} title="Ayarlar">
@@ -409,6 +440,31 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             Müşteri veritabanınızdaki sessiz gelir kayıpları ve kurtarma radarı.
           </p>
         </div>
+
+        {/* ── FREEMIUM PAYWALL BANNER ── */}
+        {limitHit && userPlan === 'FREE' && (
+          <div style={{
+            background: 'rgba(255, 126, 71, 0.1)',
+            border: '1px solid rgba(255, 126, 71, 0.4)',
+            borderRadius: 'var(--r-lg)',
+            padding: '1.25rem 1.5rem',
+            marginBottom: '2rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem'
+          }}>
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--neon-orange)', marginBottom: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <AlertCircle size={18} /> Sadece İlk 50 Kayıt Analiz Edildi
+              </h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-main)', margin: 0, opacity: 0.9 }}>
+                Ücretsiz planda olduğunuz için dosyanızın sadece ilk 50 satırı işlendi. Kalan kayıtlardaki riskleri görmek ve kurtarma operasyonunu yönetmek için planınızı yükseltin.
+              </p>
+            </div>
+            <button className="btn btn-glow-orange" style={{ padding: '0.625rem 1.25rem', fontSize: '0.875rem', fontWeight: 700 }}
+              onClick={() => setShowPricing(true)}>
+              Pro Plana Geç (<DollarSign size={14} style={{ marginLeft: -2 }}/>97/ay)
+            </button>
+          </div>
+        )}
 
         {/* ── SUB-NAV TABS ── */}
         <div className="tabs-underline" style={{ marginBottom: '1.75rem' }}>
@@ -687,22 +743,8 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
 
               {filteredRecords.map(record => (
                 <div key={record.id} id={`record-${record.id}`} className="record-card" style={{ scrollMarginTop: '80px' }}>
-                  <div className="record-grid">
 
-                    {/* LEFT: Context */}
-                    <div className="record-left">
-                      {/* Urgency + Priority Row */}
-                      <div style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        flexWrap: 'wrap', gap: '0.625rem', marginBottom: '1.25rem',
-                      }}>
-                        <span className={`badge ${record.urgency === 'CRITICAL' ? 'badge-danger' : record.urgency === 'MEDIUM' ? 'badge-warning' : 'badge-info'}`}>
-                          {record.urgency === 'CRITICAL' ? '🔴 Kritik Aciliyet' : record.urgency === 'MEDIUM' ? '🟡 Orta Aciliyet' : '🔵 Düşük Aciliyet'}
-                        </span>
-                        <span className="priority-tag">
-                          ÖNCELİK: {record.priorityScore || 50}/100
-                        </span>
-                      </div>
+                  <div className="record-content">
 
                       <h3 style={{
                         fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.02em',
@@ -777,10 +819,10 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                           })}
                         </div>
                       </div>
-                    </div>
+                  </div>
 
-                    {/* RIGHT: Intelligence & Action */}
-                    <div className="record-right">
+                  {/* RIGHT: Intelligence & Action */}
+                  <div className="record-action-area">
                       <div style={{ flex: 1 }}>
                         {/* Confidence badge */}
                         <div style={{
@@ -1013,7 +1055,6 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                       </div>
                     </div>
 
-                  </div>
                 </div>
               ))}
             </div>
@@ -1075,6 +1116,31 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
               </div>
             </div>
           </>
+        ) : userPlan === 'FREE' ? (
+          <div className="stack-lg animate-in" style={{ padding: '3rem 1rem', textAlign: 'center' }}>
+            <div style={{
+              background: 'rgba(255, 126, 71, 0.05)',
+              border: '1px solid rgba(255, 126, 71, 0.3)',
+              borderRadius: 'var(--r-xl)',
+              padding: '4rem 2rem',
+              maxWidth: '680px',
+              margin: '0 auto',
+            }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(255, 126, 71, 0.1)', color: 'var(--neon-orange)', marginBottom: '1.5rem' }}>
+                <Target size={32} />
+              </div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem' }}>
+                Gelişmiş Kurtarma ve Sonuç Merkezi
+              </h2>
+              <p style={{ fontSize: '1rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2rem' }}>
+                Ücretsiz planda sadece teşhis yapabilirsiniz. "Geri Kazanım & Sonuç Merkezi" (Outcomes Center); kurtarılan ciroları, before/after dönüşümlerini ve operasyonel başarı oranlarını takip etmek içindir ve sadece <b>Pro</b> planda mevcuttur.
+              </p>
+              <button className="btn btn-glow-orange" style={{ padding: '0.875rem 2rem', fontSize: '1rem', fontWeight: 700 }}
+                onClick={() => setShowPricing(true)}>
+                Pro Plana Geç (<DollarSign size={16} style={{ marginLeft: -2 }}/>97/ay)
+              </button>
+            </div>
+          </div>
         ) : (
           /* ── OUTCOMES VIEW ── */
           <div className="stack-lg animate-in">

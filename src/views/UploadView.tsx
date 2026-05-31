@@ -34,7 +34,12 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
       header: true,
       skipEmptyLines: true,
       complete: async (results) => {
-        await addRecordsFromCSV(results.data as RawCSVRow[]);
+        const { limitHit } = await addRecordsFromCSV(results.data as RawCSVRow[]);
+        if (limitHit) {
+          localStorage.setItem('rrio_limit_hit', 'true');
+        } else {
+          localStorage.removeItem('rrio_limit_hit');
+        }
         onStartDiagnosis();
       },
       error: (error: Error) => {
@@ -57,7 +62,12 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
       { Company: 'Karya Teknoloji', Contact: 'Deniz Eren (Kurucu)', Project: 'Mobil Uygulama Arayüzü', Revenue: '12000', LastContactDays: '210' },
       { Company: 'Vortex Global', Contact: 'Hakan Çelik (Direktör)', Project: 'Bulut Altyapı Desteği', Revenue: '1600', LastContactDays: '120' },
     ];
-    await addRecordsFromCSV(demoCSV);
+    const { limitHit } = await addRecordsFromCSV(demoCSV);
+    if (limitHit) {
+      localStorage.setItem('rrio_limit_hit', 'true');
+    } else {
+      localStorage.removeItem('rrio_limit_hit');
+    }
     onStartDiagnosis();
   };
 

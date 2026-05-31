@@ -4,9 +4,10 @@ import {
   CheckCircle, LogOut, ArrowLeft, RefreshCw, TrendingUp,
   BarChart2, AlertTriangle, User
 } from 'lucide-react';
-import { getRecords } from '../lib/db';
+import { getRecords, getUserPlan } from '../lib/db';
 import type { IntelligenceRecord, Category } from '../lib/db';
 import { Button } from '../components/Button';
+import { PricingModal } from '../components/PricingModal';
 
 interface PipelineViewProps {
   onNavigateDiagnosis: () => void;
@@ -67,6 +68,7 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
   const [records, setRecords] = useState<IntelligenceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
 
   const loadData = async (showRefreshIndicator = false) => {
     if (showRefreshIndicator) setRefreshing(true);
@@ -148,6 +150,67 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem' }}>
         <div className="spinner spinner-lg" />
         <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Pipeline yükleniyor...</p>
+      </div>
+    );
+  }
+
+  const userPlan = getUserPlan();
+
+  if (userPlan === 'FREE') {
+    return (
+      <div className="page-full animate-in">
+        <header className="topbar">
+          <div className="topbar-inner">
+            <div className="topbar-brand">
+              <div className="topbar-brand-icon"><Cpu size={17} className="animate-pulse-slow" /></div>
+              <div>
+                <span className="topbar-brand-name">RRIO</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-faint)', marginLeft: '0.375rem', fontWeight: 500 }}>Pipeline</span>
+              </div>
+            </div>
+            <div className="topbar-actions">
+              <button className="btn btn-outline" style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }} onClick={onNavigateDiagnosis}>
+                <ArrowLeft size={14} /> Teşhis Ekranı
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div className="page-container" style={{ paddingTop: '6rem', paddingBottom: '4rem', display: 'flex', justifyContent: 'center' }}>
+          <div style={{
+            background: 'rgba(255, 126, 71, 0.05)',
+            border: '1px solid rgba(255, 126, 71, 0.3)',
+            borderRadius: 'var(--r-xl)',
+            padding: '4rem 2rem',
+            maxWidth: '680px',
+            textAlign: 'center'
+          }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(255, 126, 71, 0.1)', color: 'var(--neon-orange)', marginBottom: '1.5rem' }}>
+              <BarChart2 size={32} />
+            </div>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem' }}>
+              Kanban Pipeline Görünümü
+            </h2>
+            <p style={{ fontSize: '1rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2rem' }}>
+              "Gelişmiş Pipeline Görünümü" ile müşterilerinizi Kanban tahtasında yönetebilir, süreçler arası sürükle-bırak yapabilir ve kurtarma operasyonlarını görselleştirebilirsiniz. Bu özellik sadece <b>Pro</b> ve <b>Agency</b> planlarında mevcuttur.
+            </p>
+            <button className="btn btn-glow-orange" style={{ padding: '0.875rem 2rem', fontSize: '1rem', fontWeight: 700 }}
+              onClick={() => setShowPricing(true)}>
+              Pro Plana Geç (<DollarSign size={16} style={{ marginLeft: -2 }}/>97/ay)
+            </button>
+          </div>
+        </div>
+
+        {showPricing && (
+          <PricingModal 
+            onClose={() => setShowPricing(false)}
+            onPlanUpdated={() => {
+              // The component will re-render because of the top-level plan check, 
+              // but we need to trigger a state update. We can just force reload or loadData.
+              window.location.reload();
+            }}
+          />
+        )}
       </div>
     );
   }
