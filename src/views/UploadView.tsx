@@ -97,35 +97,8 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
   };
 
   return (
-    <div className="page-full animate-in">
-
-      {/* ── TOPBAR ── */}
-      <header className="topbar">
-        <div className="topbar-inner">
-          <div className="topbar-brand">
-            <div className="topbar-brand-icon">
-              <Cpu size={18} className="animate-pulse-slow" />
-            </div>
-            <span className="topbar-brand-name">RRIO RRS</span>
-          </div>
-
-          <div className="topbar-actions">
-            <span className="user-pill">
-              <User size={12} />
-              {userEmail.split('@')[0]}
-            </span>
-            <button
-              onClick={onLogout}
-              className="btn btn-outline"
-              style={{ padding: '0.5rem 0.875rem', minHeight: '40px', fontSize: '0.75rem' }}
-            >
-              <LogOut size={14} /> Çıkış
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* ── GOOGLE OAUTH MODAL ── */}
+    <>
+      {/* ── GOOGLE OAUTH MODAL — rendered outside animate-in to prevent fixed positioning bug ── */}
       {showGoogleAuth && (
         <GoogleOAuthModal
           onClose={() => setShowGoogleAuth(false)}
@@ -133,7 +106,35 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
         />
       )}
 
-      <div className="page-container" style={{ paddingTop: '3.5rem', paddingBottom: '4rem' }}>
+      <div className="page-full animate-in">
+
+        {/* ── TOPBAR ── */}
+        <header className="topbar">
+          <div className="topbar-inner">
+            <div className="topbar-brand">
+              <div className="topbar-brand-icon">
+                <Cpu size={18} className="animate-pulse-slow" />
+              </div>
+              <span className="topbar-brand-name">RRIO RRS</span>
+            </div>
+
+            <div className="topbar-actions">
+              <span className="user-pill">
+                <User size={12} />
+                {userEmail.split('@')[0]}
+              </span>
+              <button
+                onClick={onLogout}
+                className="btn btn-outline"
+                style={{ padding: '0.5rem 0.875rem', minHeight: '40px', fontSize: '0.75rem' }}
+              >
+                <LogOut size={14} /> Çıkış
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div className="page-container" style={{ paddingTop: '3.5rem', paddingBottom: '4rem' }}>
 
         {/* ── HERO ── */}
         <div className="animate-in" style={{ textAlign: 'center', maxWidth: '820px', margin: '0 auto 5rem' }}>
@@ -537,5 +538,6 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
 
       </div>
     </div>
+    </>
   );
 }
