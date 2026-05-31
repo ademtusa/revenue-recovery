@@ -54,14 +54,42 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
     onStartDiagnosis();
   };
 
-  const handleLoadDemoData = async () => {
-    const demoCSV = [
-      { Company: 'Apex Enerji Ltd.', Contact: 'Mert Aksoy (Satış Md.)', Project: 'Yapay Zeka Danışmanlığı', Revenue: '9800', LastContactDays: '45' },
-      { Company: 'Nova Retail A.Ş.', Contact: 'Ebru Şahin (CFO)', Project: 'CRM Entegrasyonu Lisansı', Revenue: '3500', LastContactDays: '15' },
-      { Company: 'Atlas Bilişim', Contact: 'Burak Yalçın (CTO)', Project: 'Yıllık Bakım Anlaşması', Revenue: '5400', LastContactDays: '12' },
-      { Company: 'Karya Teknoloji', Contact: 'Deniz Eren (Kurucu)', Project: 'Mobil Uygulama Arayüzü', Revenue: '12000', LastContactDays: '210' },
-      { Company: 'Vortex Global', Contact: 'Hakan Çelik (Direktör)', Project: 'Bulut Altyapı Desteği', Revenue: '1600', LastContactDays: '120' },
-    ];
+  const handleLoadSectorDemoData = async (sector: 'ecommerce' | 'agency' | 'membership') => {
+    localStorage.setItem('rrio_revenue_records', '[]');
+    
+    let demoCSV: RawCSVRow[] = [];
+    if (sector === 'ecommerce') {
+      demoCSV = [
+        { Company: 'TrendModa Giyim Ltd.', Contact: 'Meltem Öz (E-Ticaret Md.)', Project: 'Kayıp Sepet & Ödeme Sayfası Kurtarma', Revenue: '18400', LastContactDays: '14', Email: 'meltem@trendmoda.com.tr' },
+        { Company: 'Züccaciye Dünyası', Contact: 'Kaan Demir (Kurucu)', Project: 'Toptan Sipariş Formu Terki', Revenue: '42000', LastContactDays: '45', Email: 'kaan@zuccaciyedunyasi.com' },
+        { Company: 'Kozmetik Deposu', Contact: 'Seda Kaya (CFO)', Project: 'Yıllık B2B Tedarik Sözleşmesi', Revenue: '75000', LastContactDays: '120', Email: 'seda.kaya@kozmetikdeposu.com' },
+        { Company: 'PetShop Pazarı', Contact: 'Ali Can (Operasyon)', Project: 'Aylık Tekrarlayan Mama Paketi İptali', Revenue: '3200', LastContactDays: '30', Email: 'ali@petshoppazari.com' },
+        { Company: 'Gurme Lezzetler', Contact: 'Zeynep Tekin (Satış)', Project: 'Kurumsal Hediye Siparişi Takibi', Revenue: '9800', LastContactDays: '21', Email: 'zeynep@gurmelezzetler.io' },
+        { Company: 'SmartHome Türkiye', Contact: 'Ömer Çelik (Genel Müdür)', Project: 'Akıllı Ev Paketleri Satış Teklifi', Revenue: '28000', LastContactDays: '210', Email: 'omer@smarthome.com.tr' },
+        { Company: 'ModaLine Tasarım', Contact: 'Deniz Aslan (Tasarım Direktörü)', Project: 'VIP Kumaş Alımı Fiyat Teklifi', Revenue: '15000', LastContactDays: '90', Email: 'deniz.aslan@modaline.com' },
+        { Company: 'Elektronik Center', Contact: 'Selim Yıldız (Kategori Md.)', Project: 'Toplu Monitör Siparişi Askıda', Revenue: '55000', LastContactDays: '60', Email: 'selim.yildiz@elektronikcenter.com' },
+      ];
+    } else if (sector === 'agency') {
+      demoCSV = [
+        { Company: 'Alfa Yazılım & Danışmanlık', Contact: 'Ahmet Yılmaz (CEO)', Project: 'Dijital Pazarlama Aylık Retainer', Revenue: '15000', LastContactDays: '45', Email: 'ahmet.yilmaz@alfayazilim.com' },
+        { Company: 'Beta Creative Studio', Contact: 'Selin Arslan (Kurucu Ortak)', Project: 'Web Arayüz Tasarımı & UX Projesi', Revenue: '25000', LastContactDays: '75', Email: 'selin@betacreative.com' },
+        { Company: 'Vega Medya Grubu', Contact: 'Burak Şahin (Direktör)', Project: 'Sosyal Medya Yönetim Sözleşmesi', Revenue: '12000', LastContactDays: '12', Email: 'burak@vegamedya.com' },
+        { Company: 'Gamma SEO Agency', Contact: 'Canan Aksoy (SEO Lideri)', Project: 'SEO & İçerik Pazarlaması Yenileme', Revenue: '8000', LastContactDays: '60', Email: 'canan@gammasound.com' },
+        { Company: 'Delta Video Prodüksiyon', Contact: 'Murat Yıldırım (Yapımcı)', Project: 'Kurumsal Reklam Tanıtım Filmi', Revenue: '38000', LastContactDays: '190', Email: 'murat@deltavideo.com' },
+        { Company: 'Sigma Medya Planlama', Contact: 'Eda Kaya (Bütçe Md.)', Project: 'Yıllık Google Ads Yönetim Sözleşmesi', Revenue: '9500', LastContactDays: '25', Email: 'eda@sigmamedia.io' },
+        { Company: 'Omni Marka İletişimi', Contact: 'Turgut Efe (Kreatif Direktör)', Project: 'Rebranding & Logo Çalışması Teklifi', Revenue: '40000', LastContactDays: '110', Email: 'turgut@omniiletisim.com' },
+      ];
+    } else if (sector === 'membership') {
+      demoCSV = [
+        { Company: 'SaaSify Bulut Sistemleri', Contact: 'Bülent Avcı (CTO)', Project: 'Enterprise Bulut Planı (10 Koltuk)', Revenue: '4800', LastContactDays: '90', Email: 'bulent@saasify.io' },
+        { Company: 'FitLife Spor Merkezleri', Contact: 'Ceren Çetin (Operasyon Direktörü)', Project: 'Yıllık Kurumsal Premium Üyelik', Revenue: '2400', LastContactDays: '45', Email: 'ceren@fitlife.com' },
+        { Company: 'EnglishOnline Academy', Contact: 'Mert Güler (Eğitim Md.)', Project: 'Kurumsal İngilizce Paketi Lisansı', Revenue: '12000', LastContactDays: '15', Email: 'mert.guler@englishonline.com' },
+        { Company: 'CoWork Loft Center', Contact: 'Sibel Yıldız (Müşteri Yöneticisi)', Project: 'Ortak Ofis Kullanım Aboneliği', Revenue: '3500', LastContactDays: '30', Email: 'sibel@coworkloft.com' },
+        { Company: 'ChefBox Yemek Servisi', Contact: 'Deniz Kaya (Pazarlama)', Project: 'Kurumsal Günlük Öğle Yemeği Paketi', Revenue: '1800', LastContactDays: '20', Email: 'deniz@chefbox.com' },
+        { Company: 'DesignCloud Premium', Contact: 'Hakan Şen (Art Director)', Project: 'Pro Tasarım Şablonları Lisansı', Revenue: '6000', LastContactDays: '70', Email: 'hakan@designcloud.io' },
+      ];
+    }
+
     const { limitHit } = await addRecordsFromCSV(demoCSV);
     if (limitHit) {
       localStorage.setItem('rrio_limit_hit', 'true');
@@ -70,6 +98,7 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
     }
     onStartDiagnosis();
   };
+
 
   const handleDownloadTemplate = () => {
     const header = 'Company,Contact,Project,Revenue,LastContactDays,Email,Phone';
@@ -137,7 +166,7 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
         <div className="page-container" style={{ paddingTop: '3.5rem', paddingBottom: '4rem' }}>
 
         {/* ── HERO ── */}
-        <div className="animate-in" style={{ textAlign: 'center', maxWidth: '820px', margin: '0 auto 5rem' }}>
+        <div className="animate-in" style={{ textAlign: 'center', maxWidth: '860px', margin: '0 auto 5rem' }}>
           <div className="hero-badge">
             <Cpu size={12} /> Gelir Kaçağı İşletim Sistemi
           </div>
@@ -161,7 +190,7 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
             color: 'var(--text-muted)',
             lineHeight: 1.7,
             marginBottom: '2rem',
-            maxWidth: '640px',
+            maxWidth: '680px',
             margin: '0 auto 2rem',
           }}>
             RRIO, e-posta ve CRM verilerinizdeki unutulmuş takipleri, askıda kalmış teklifleri ve 
@@ -174,7 +203,7 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
             <button onClick={scrollToUpload} className="btn btn-primary">
               Hemen Teşhis Et <ArrowDown size={16} />
             </button>
-            <button onClick={handleLoadDemoData} className="btn btn-glow-orange">
+            <button onClick={() => handleLoadSectorDemoData('ecommerce')} className="btn btn-glow-orange">
               🚀 Hazır Demo Verisiyle Dene
             </button>
           </div>
@@ -347,7 +376,7 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
           ref={uploadSectionRef}
           className="glass-panel"
           style={{
-            maxWidth: '760px', margin: '0 auto',
+            maxWidth: '860px', margin: '0 auto',
             border: '1px solid rgba(255,126,71,0.12)',
             scrollMarginTop: '80px',
           }}
@@ -471,6 +500,86 @@ export function UploadView({ onStartDiagnosis, userEmail, onLogout }: UploadView
                   padding: '0.3rem 0.65rem', borderRadius: 'var(--r-full)', flexShrink: 0,
                 }}>
                   CSV
+                </div>
+              </button>
+            </div>
+
+            {/* OR separator */}
+            <div style={{ display: 'flex', alignItems: 'center', margin: '2rem 0 1.5rem', gap: '1rem' }}>
+              <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+              <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>VEYA</span>
+              <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+            </div>
+
+            <p style={{
+              fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
+              textTransform: 'uppercase', color: 'var(--text-faint)',
+              textAlign: 'center', marginBottom: '1.25rem',
+            }}>
+              Hazır Demo Veri Setleriyle Deneyin
+            </p>
+
+            {/* Sector Datasets Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: '0.875rem',
+              marginBottom: '2rem',
+            }}>
+              {/* E-Commerce Dataset */}
+              <button
+                type="button"
+                className="action-tile action-tile-google"
+                onClick={() => handleLoadSectorDemoData('ecommerce')}
+                style={{ padding: '1rem 1.25rem', minHeight: '68px', display: 'flex', alignItems: 'center', gap: '0.875rem', borderColor: 'rgba(13,211,255,0.2)', background: 'rgba(13,211,255,0.03)' }}
+              >
+                <div className="icon-box" style={{ width: '38px', height: '38px', flexShrink: 0, background: 'rgba(13,211,255,0.1)', color: 'var(--accent-primary)', fontSize: '1.125rem' }}>
+                  🛒
+                </div>
+                <div style={{ textAlign: 'left', flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontWeight: 750, fontSize: '0.875rem', color: 'var(--text-main)', marginBottom: '0.15rem' }}>E-Ticaret Seti</span>
+                  <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)' }}>8 Kaçak Fırsat Analizi</span>
+                </div>
+                <div style={{ fontSize: '0.58rem', fontWeight: 800, background: 'rgba(13,211,255,0.08)', color: 'var(--accent-primary)', border: '1px solid rgba(13,211,255,0.18)', padding: '0.2rem 0.5rem', borderRadius: 'var(--r-full)' }}>
+                  Demo
+                </div>
+              </button>
+
+              {/* Agency Dataset */}
+              <button
+                type="button"
+                className="action-tile action-tile-crm"
+                onClick={() => handleLoadSectorDemoData('agency')}
+                style={{ padding: '1rem 1.25rem', minHeight: '68px', display: 'flex', alignItems: 'center', gap: '0.875rem', borderColor: 'rgba(255,126,71,0.2)', background: 'rgba(255,126,71,0.03)' }}
+              >
+                <div className="icon-box" style={{ width: '38px', height: '38px', flexShrink: 0, background: 'rgba(255,126,71,0.1)', color: 'var(--neon-orange)', fontSize: '1.125rem' }}>
+                  🏢
+                </div>
+                <div style={{ textAlign: 'left', flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontWeight: 750, fontSize: '0.875rem', color: 'var(--text-main)', marginBottom: '0.15rem' }}>Ajans Seti</span>
+                  <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)' }}>7 Müşteri &amp; Teklif Analizi</span>
+                </div>
+                <div style={{ fontSize: '0.58rem', fontWeight: 800, background: 'rgba(255,126,71,0.08)', color: 'var(--neon-orange)', border: '1px solid rgba(255,126,71,0.18)', padding: '0.2rem 0.5rem', borderRadius: 'var(--r-full)' }}>
+                  Demo
+                </div>
+              </button>
+
+              {/* Membership Dataset */}
+              <button
+                type="button"
+                className="action-tile action-tile-google"
+                onClick={() => handleLoadSectorDemoData('membership')}
+                style={{ padding: '1rem 1.25rem', minHeight: '68px', display: 'flex', alignItems: 'center', gap: '0.875rem', borderColor: 'rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.03)' }}
+              >
+                <div className="icon-box" style={{ width: '38px', height: '38px', flexShrink: 0, background: 'rgba(16,185,129,0.1)', color: 'var(--status-success)', fontSize: '1.125rem' }}>
+                  💳
+                </div>
+                <div style={{ textAlign: 'left', flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontWeight: 750, fontSize: '0.875rem', color: 'var(--text-main)', marginBottom: '0.15rem' }}>Abonelik / Üyelik Seti</span>
+                  <span style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-muted)' }}>6 Abonelik Çürüme Analizi</span>
+                </div>
+                <div style={{ fontSize: '0.58rem', fontWeight: 800, background: 'rgba(16,185,129,0.08)', color: 'var(--status-success)', border: '1px solid rgba(16,185,129,0.18)', padding: '0.2rem 0.5rem', borderRadius: 'var(--r-full)' }}>
+                  Demo
                 </div>
               </button>
             </div>

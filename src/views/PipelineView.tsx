@@ -14,6 +14,7 @@ interface PipelineViewProps {
   onReset: () => void;
   userEmail: string;
   onLogout: () => void;
+  onDemoReset: () => void;
 }
 
 const CATEGORY_CONFIG: Record<Category, { label: string; icon: React.ReactNode; color: string; rgb: string }> = {
@@ -64,7 +65,7 @@ const OUTCOME_COLORS: Record<string, string> = {
   churned: 'var(--status-danger)',
 };
 
-export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout }: PipelineViewProps) {
+export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout, onDemoReset }: PipelineViewProps) {
   const [records, setRecords] = useState<IntelligenceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -256,6 +257,14 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
             >
               Yeniden Tara
             </button>
+            <button
+              className="btn btn-danger"
+              style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}
+              onClick={onDemoReset}
+              title="Tüm demo verisini sil ve sıfırla"
+            >
+              Demo'yu Sıfırla
+            </button>
             <span className="user-pill">
               <User size={12} />
               {userEmail.split('@')[0]}
@@ -329,7 +338,7 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
         </div>
 
         {/* ── KANBAN BOARD ── */}
-        <div style={{ overflowX: 'auto', paddingBottom: '1rem' }}>
+        <div className="kanban-scroll-wrapper">
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, minmax(280px, 1fr))',
@@ -340,6 +349,7 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
             {columns.map(col => (
               <div
                 key={col.id}
+                className="kanban-col"
                 style={{
                   background: col.bgColor,
                   border: `1px solid ${col.borderColor}`,
@@ -559,6 +569,11 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Mobile scroll hint */}
+        <div className="kanban-scroll-hint">
+          <span>← Kaydırarak tüm kolonları görüntüleyin →</span>
         </div>
 
         {/* ── BOTTOM CTA ── */}

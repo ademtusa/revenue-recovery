@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { X, AlertTriangle, CheckCircle, ArrowRight, Settings, CreditCard, Heart, Save } from 'lucide-react';
 import { Button } from './Button';
+import { getUserPlan } from '../lib/db';
+import type { PlanType } from '../lib/db';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -127,84 +129,104 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
     </div>
   );
 
-  const renderSubscription = () => (
-    <div className="stack-md animate-in">
-      <div>
-        <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.375rem' }}>
-          Abonelik ve Limit Bilgisi
-        </h3>
-        <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-          Aktif paketinizi görüntüleyin ve diğer planları inceleyin.
-        </p>
-      </div>
+  const renderSubscription = () => {
+    const currentPlan: PlanType = getUserPlan();
 
-      {/* Active plan */}
-      <div style={{
-        padding: '1.25rem',
-        background: 'rgba(13,211,255,0.04)',
-        border: '1px solid rgba(13,211,255,0.18)',
-        borderRadius: 'var(--r-md)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        <div style={{ position: 'absolute', top: '0.875rem', right: '0.875rem' }}>
-          <span className="badge badge-success">Aktif Üyelik</span>
+    const getPlanDisplay = (plan: PlanType) => {
+      if (plan === 'PRO') return { name: 'Pro Plan', desc: '$97/Ay · Sınırsız analiz' };
+      if (plan === 'AGENCY') return { name: 'Agency Plan', desc: '$197/Ay · Çoklu hesap' };
+      return { name: 'Ücretsiz Plan', desc: 'Sınırlı analiz kapasitesi' };
+    };
+
+    const planDisplay = getPlanDisplay(currentPlan);
+
+    const plans = [
+      { name: 'Pro Plan', desc: 'Sınırsız Şirket, AI Yanıt Stüdyosu, PDF Raporlama', price: '$97 / Ay', planKey: 'PRO' as PlanType },
+      { name: 'Agency Plan', desc: 'Özel Veritabanı, Entegrasyon API, Dedicated VPS', price: '$197 / Ay', planKey: 'AGENCY' as PlanType },
+      { name: 'Enterprise VPS', desc: 'Özel Sunucu, Sınırsız Entegrasyon, 7/24 Destek', price: 'İletişime Geçin', planKey: null },
+    ];
+
+    return (
+      <div className="stack-md animate-in">
+        <div>
+          <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.375rem' }}>
+            Abonelik ve Limit Bilgisi
+          </h3>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+            Aktif paketinizi görüntüleyin ve diğer planları inceleyin.
+          </p>
         </div>
-        <span style={{
-          display: 'block', fontSize: '0.65rem', fontWeight: 700,
-          letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent-primary)',
-          marginBottom: '0.375rem',
+
+        {/* Active plan */}
+        <div style={{
+          padding: '1.25rem',
+          background: 'rgba(13,211,255,0.04)',
+          border: '1px solid rgba(13,211,255,0.18)',
+          borderRadius: 'var(--r-md)',
+          position: 'relative',
+          overflow: 'hidden',
         }}>
-          Mevcut Plan
-        </span>
-        <span style={{ display: 'block', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
-          RRS Pro Analist Paketi
-        </span>
-        <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-          Sonraki Yenileme: 15 Haziran 2026 ($99 / Ay)
-        </span>
-      </div>
-
-      {/* Plan list */}
-      <div className="stack-xs">
-        <span style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
-          Tüm Paketler
-        </span>
-
-        {[
-          { name: 'Starter Plan', desc: 'Maks 10 Şirket Teşhisi, Manuel Şablonlar', price: '$29 / Ay', active: false },
-          { name: 'Pro Plan', desc: 'Sınırsız Şirket, AI Yanıt Stüdyosu, PDF Raporlama', price: '$99 / Ay', active: true },
-          { name: 'Enterprise VPS', desc: 'Özel Veritabanı, Entegrasyon API, Dedicated VPS', price: 'İletişime Geçin', active: false },
-        ].map((plan) => (
-          <div key={plan.name} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0.875rem 1rem',
-            background: plan.active ? 'rgba(13,211,255,0.04)' : 'rgba(5,6,15,0.5)',
-            border: `1px solid ${plan.active ? 'rgba(13,211,255,0.18)' : 'var(--border)'}`,
-            borderRadius: 'var(--r-sm)',
-            gap: '1rem',
-          }}>
-            <div>
-              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.15rem' }}>
-                {plan.name} {plan.active && <span className="badge badge-primary" style={{ fontSize: '0.6rem', marginLeft: '0.375rem' }}>Aktif</span>}
-              </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{plan.desc}</div>
-            </div>
-            <div style={{
-              fontSize: '0.875rem', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0,
-              color: plan.active ? 'var(--accent-primary)' : 'var(--text-main)',
-            }}>
-              {plan.price}
-            </div>
+          <div style={{ position: 'absolute', top: '0.875rem', right: '0.875rem' }}>
+            <span className="badge badge-success">Aktif</span>
           </div>
-        ))}
-      </div>
+          <span style={{
+            display: 'block', fontSize: '0.65rem', fontWeight: 700,
+            letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent-primary)',
+            marginBottom: '0.375rem',
+          }}>
+            Mevcut Plan
+          </span>
+          <span style={{ display: 'block', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+            {planDisplay.name}
+          </span>
+          <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+            {planDisplay.desc} &nbsp;·&nbsp;
+            <span style={{ color: 'var(--status-warning)', fontStyle: 'italic' }}>
+              (Demo ortamında ödeme aktif değildir)
+            </span>
+          </span>
+        </div>
 
-      <div style={{ paddingTop: '0.75rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
-        <Button variant="outline" onClick={onClose}>Kapat</Button>
+        {/* Plan list */}
+        <div className="stack-xs">
+          <span style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
+            Tüm Paketler
+          </span>
+
+          {plans.map((plan) => {
+            const isActive = plan.planKey === currentPlan;
+            return (
+              <div key={plan.name} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '0.875rem 1rem',
+                background: isActive ? 'rgba(13,211,255,0.04)' : 'rgba(5,6,15,0.5)',
+                border: `1px solid ${isActive ? 'rgba(13,211,255,0.18)' : 'var(--border)'}`,
+                borderRadius: 'var(--r-sm)',
+                gap: '1rem',
+              }}>
+                <div>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.15rem' }}>
+                    {plan.name} {isActive && <span className="badge badge-primary" style={{ fontSize: '0.6rem', marginLeft: '0.375rem' }}>Aktif</span>}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{plan.desc}</div>
+                </div>
+                <div style={{
+                  fontSize: '0.875rem', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0,
+                  color: isActive ? 'var(--accent-primary)' : 'var(--text-main)',
+                }}>
+                  {plan.price}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ paddingTop: '0.75rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
+          <Button variant="outline" onClick={onClose}>Kapat</Button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderCancelStep1 = () => (
     <div className="stack-md animate-in">

@@ -69,7 +69,11 @@ select option { background: var(--surface-2); }
 /* ========================================
    BASE
    ======================================== */
-html { font-size: 16px; }
+html {
+  font-size: 16px;
+  overflow-y: scroll;          /* scrollbar alanı her sayfada rezerve → geçişte zıplama yok */
+  scrollbar-gutter: stable;    /* scrollbar olmasa bile yer kaplar */
+}
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -1712,7 +1716,229 @@ input[type="range"].range-orange::-webkit-slider-thumb {
 /* ========================================
    SCROLL-BASED FADE EDGE (for tab bars)
    ======================================== */
+/* ========================================
+   SCROLL-BASED FADE EDGE (for tab bars)
+   ======================================== */
 .fade-edge-right {
   mask-image: linear-gradient(to right, black 80%, transparent 100%);
   -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
 }
+
+/* ========================================
+   PRICING MODAL GRID (responsive)
+   ======================================== */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================
+   KANBAN BOARD — Touch-friendly scroll
+   ======================================== */
+.kanban-scroll-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 1rem;
+  /* Hide scrollbar on modern browsers but keep functionality */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+.kanban-scroll-wrapper::-webkit-scrollbar {
+  height: 4px;
+}
+.kanban-scroll-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+.kanban-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+
+.kanban-col {
+  scroll-snap-align: start;
+}
+
+/* Mobile scroll hint — only visible on touch devices */
+.kanban-scroll-hint {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--r-sm);
+  background: rgba(255,255,255,0.02);
+}
+
+@media (hover: none) {
+  .kanban-scroll-hint {
+    display: flex;
+  }
+}
+
+/* ========================================
+   MOBILE TOPBAR IMPROVEMENTS
+   ======================================== */
+@media (max-width: 768px) {
+  .topbar-inner {
+    padding: 0 1rem;
+    height: 56px;
+    gap: 0.5rem;
+  }
+
+  .topbar-actions {
+    gap: 0.375rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-right: 0.25rem;
+  }
+
+  .topbar-actions::-webkit-scrollbar { display: none; }
+
+  .topbar-actions .btn {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.68rem;
+    min-height: 36px;
+    letter-spacing: 0;
+  }
+
+  .user-pill {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-brand-name {
+    display: none;
+  }
+}
+
+/* ========================================
+   MOBILE MODAL IMPROVEMENTS
+   ======================================== */
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0.5rem;
+    align-items: flex-end;
+  }
+
+  .modal-panel {
+    max-height: 92vh;
+    border-bottom-left-radius: var(--r-md);
+    border-bottom-right-radius: var(--r-md);
+  }
+
+  .settings-modal-panel {
+    max-height: 92vh;
+  }
+
+  .modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1.25rem;
+  }
+}
+
+/* ========================================
+   MOBILE PAGE IMPROVEMENTS
+   ======================================== */
+@media (max-width: 640px) {
+  .page-container {
+    padding: 0 0.875rem;
+  }
+
+  /* KPI grid on very small screens: 2 columns */
+  .kpi-card {
+    padding: 1rem 1.125rem;
+  }
+
+  .kpi-value {
+    font-size: 1.5rem;
+  }
+
+  /* Auth card max-width constraint */
+  .auth-card {
+    border-radius: var(--r-lg);
+  }
+
+  /* Lifecycle grid on mobile */
+  .lifecycle-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .lifecycle-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ========================================
+   SETTINGS MODAL RESPONSIVE
+   ======================================== */
+@media (max-width: 640px) {
+  .settings-tab-nav {
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 0.125rem;
+    padding: 0.5rem 0.875rem;
+  }
+
+  .settings-tab-nav::-webkit-scrollbar { display: none; }
+
+  .settings-tab-btn {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+  }
+
+  .settings-modal-body {
+    padding: 1.125rem;
+  }
+}
+
+/* ========================================
+   DIAGNOSIS VIEW — RESPONSIVE
+   ======================================== */
+@media (max-width: 900px) {
+  .tab-btn {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* ========================================
+   ANIMATION IMPROVEMENTS
+   ======================================== */
+@keyframes slide-up-fade {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Stagger delays for list items */
+.animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.animate-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.animate-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.animate-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.animate-stagger > *:nth-child(6) { animation-delay: 300ms; }

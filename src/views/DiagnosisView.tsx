@@ -34,9 +34,10 @@ interface DiagnosisViewProps {
   userEmail: string;
   onLogout: () => void;
   onNavigatePipeline: () => void;
+  onDemoReset: () => void;
 }
 
-export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline }: DiagnosisViewProps) {
+export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline, onDemoReset }: DiagnosisViewProps) {
   const [activeView, setActiveView] = useState<'diagnose' | 'outcomes'>('diagnose');
   const [activeTab, setActiveTab] = useState<Category>('ABANDONED_OPPORTUNITY');
   const [records, setRecords] = useState<IntelligenceRecord[]>([]);
@@ -72,12 +73,20 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
   const [selectedOutcome, setSelectedOutcome] = useState<Record<string, OutcomeType>>({});
   const [draftTones, setDraftTones] = useState<Record<string, 'formal' | 'friendly'>>({});
 
+  const [feedbackResponses, setFeedbackResponses] = useState<any[]>([]);
+
+  const loadFeedback = () => {
+    const feedbackStr = localStorage.getItem('rrio_feedback_responses');
+    setFeedbackResponses(feedbackStr ? JSON.parse(feedbackStr) : []);
+  };
+
   const loadData = async () => {
     setLoading(true);
     const data = await getRecords();
     setRecords(data);
     const leads = await getLeadCaptures();
     setLeadCaptures(leads);
+    loadFeedback();
     setLoading(false);
   };
 
@@ -87,6 +96,8 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
       if (active) {
         setRecords(data);
         setLeadCaptures(leads);
+        const feedbackStr = localStorage.getItem('rrio_feedback_responses');
+        setFeedbackResponses(feedbackStr ? JSON.parse(feedbackStr) : []);
         setLoading(false);
       }
     });
@@ -405,6 +416,14 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
               onClick={onReset}>
               Yeniden Tara
             </button>
+            <button
+              className="btn btn-danger"
+              style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}
+              onClick={onDemoReset}
+              title="Tüm demo verisini sil ve sıfırla"
+            >
+              Demo'yu Sıfırla
+            </button>
             <button className="btn btn-glow-blue" style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}
               onClick={userPlan === 'FREE' ? () => alert('Gelişmiş Pipeline (Outcomes Center) sadece Pro planda kullanılabilir. Lütfen yükseltin.') : onNavigatePipeline}>
               📊 Pipeline
@@ -573,13 +592,13 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
           </div>
           <div className="lifecycle-grid">
             {[
-              { cls: 'ls-detect', num: '1', name: 'DETECT', desc: 'Sızıntıyı Yakala' },
-              { cls: 'ls-classify', num: '2', name: 'CLASSIFY', desc: 'Kategoriyi Sınıfla' },
-              { cls: 'ls-explain', num: '3', name: 'EXPLAIN', desc: 'Nedeni Analiz Et' },
-              { cls: 'ls-recommend', num: '4', name: 'RECOMMEND', desc: 'Strateji Belirle' },
-              { cls: 'ls-action', num: '5', name: 'ACTION', desc: 'Teması Başlat' },
-              { cls: 'ls-track', num: '6', name: 'TRACK', desc: 'Süreci İzle' },
-              { cls: 'ls-recovery', num: '7', name: 'RECOVERY', desc: 'Geliri Kurtar' },
+              { cls: 'ls-detect', num: '1', name: 'TESPİT', desc: 'Sızıntıyı Yakala' },
+              { cls: 'ls-classify', num: '2', name: 'SINIFLA', desc: 'Kategoriyi Belirle' },
+              { cls: 'ls-explain', num: '3', name: 'ANALİZ', desc: 'Nedeni İncele' },
+              { cls: 'ls-recommend', num: '4', name: 'STRATEJİ', desc: 'Yöntem Belirle' },
+              { cls: 'ls-action', num: '5', name: 'AKSİYON', desc: 'Teması Başlat' },
+              { cls: 'ls-track', num: '6', name: 'TAKİP', desc: 'Süreci İzle' },
+              { cls: 'ls-recovery', num: '7', name: 'KURTARMA', desc: 'Geliri Geri Al' },
             ].map((s) => (
               <div key={s.num} className={`lifecycle-step ${s.cls}`}>
                 <span className="ls-step-num">{s.num}. {s.name}</span>
@@ -1287,6 +1306,61 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                         <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--status-success)' }}>
                           ${lc.estimatedLoss.toLocaleString()}
                         </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Kullanıcı Geri Bildirim Havuzu */}
+        <div style={{ marginTop: '3rem' }}>
+          <div className="section-title-row">
+            <span className="section-title-text">
+              <MessageSquare size={18} style={{ color: 'var(--accent-primary)' }} />
+              Kullanıcı Geri Bildirim Havuzu
+            </span>
+            <Button
+              variant="outline"
+              onClick={loadFeedback}
+              style={{ fontSize: '0.75rem', padding: '0.5rem 1rem', minHeight: '38px' }}
+            >
+              Yenile
+            </Button>
+          </div>
+          <div className="glass-panel">
+            {feedbackResponses.length === 0 ? (
+              <div className="empty-state" style={{ padding: '2.5rem' }}>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                  Henüz toplanmış geri bildirim bulunmamaktadır.
+                </p>
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>E-Posta Adresi</th>
+                      <th>Tarih</th>
+                      <th>Fayda Seviyesi</th>
+                      <th>En Değerli Kısım</th>
+                      <th>Görüş / Öneri</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {feedbackResponses.map((fb, idx) => (
+                      <tr key={idx}>
+                        <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{fb.email}</td>
+                        <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{fb.timestamp}</td>
+                        <td>
+                          <span className={`badge ${fb.wasUseful === 'Çok Faydalı' ? 'badge-success' : fb.wasUseful === 'Biraz Faydalı' ? 'badge-warning' : 'badge-danger'}`} style={{ fontSize: '0.7rem' }}>
+                            {fb.wasUseful}
+                          </span>
+                        </td>
+                        <td style={{ color: 'var(--text-main)', fontWeight: 500 }}>{fb.mostValuable}</td>
+                        <td style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', maxWidth: '280px', whiteSpace: 'normal', wordBreak: 'break-word' }}>{fb.comment || '-'}</td>
                       </tr>
                     ))}
                   </tbody>

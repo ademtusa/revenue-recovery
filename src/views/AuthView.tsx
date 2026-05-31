@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShieldCheck, LogIn, ArrowRight, Cpu, Zap, Lock } from 'lucide-react';
+import { ShieldCheck, LogIn, ArrowRight, Cpu, Zap, Lock, FlaskConical } from 'lucide-react';
 
 interface AuthViewProps {
   onAuthSuccess: (userEmail: string) => void;
@@ -13,49 +13,35 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // SECURITY FIX: No password or account data is stored in localStorage.
+  // Auth is purely simulated: any valid email format grants access.
   const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    if (!email.includes('@') || password.length < 6) {
-      setError('Geçerli bir e-posta girin ve şifre en az 6 karakter olmalıdır.');
+    if (!email.includes('@') || email.trim().length < 5) {
+      setError('Lütfen geçerli bir e-posta adresi girin.');
       return;
     }
 
-    const accountsKey = 'rrs_simulated_accounts';
-    const accountsRaw = localStorage.getItem(accountsKey);
-    const accounts = accountsRaw ? JSON.parse(accountsRaw) : {};
-
     if (isSignUp) {
-      if (accounts[email]) {
-        setError('Bu e-posta adresiyle kayıtlı bir hesap zaten var.');
-        return;
-      }
-      accounts[email] = { password, name: name || 'Kullanıcı' };
-      localStorage.setItem(accountsKey, JSON.stringify(accounts));
-      setSuccess('Hesabınız oluşturuldu! Giriş yapılıyor...');
-      setTimeout(() => onAuthSuccess(email), 1000);
+      setSuccess('Demo hesabınız oluşturuldu! Giriş yapılıyor...');
+      setTimeout(() => {
+        localStorage.setItem('rrs_active_session', email.trim());
+        onAuthSuccess(email.trim());
+      }, 900);
     } else {
-      const user = accounts[email];
-      if (!user || user.password !== password) {
-        setError('E-posta adresi veya şifre hatalı.');
-        return;
-      }
       setSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
-      setTimeout(() => onAuthSuccess(email), 1000);
+      setTimeout(() => {
+        localStorage.setItem('rrs_active_session', email.trim());
+        onAuthSuccess(email.trim());
+      }, 900);
     }
   };
 
   const handleQuickDemoLogin = () => {
     const demoEmail = 'demo@rrs-platform.com';
-    const accountsKey = 'rrs_simulated_accounts';
-    const accountsRaw = localStorage.getItem(accountsKey);
-    const accounts = accountsRaw ? JSON.parse(accountsRaw) : {};
-    if (!accounts[demoEmail]) {
-      accounts[demoEmail] = { password: 'demopassword123', name: 'Demo Kullanıcı' };
-      localStorage.setItem(accountsKey, JSON.stringify(accounts));
-    }
     localStorage.setItem('rrs_active_session', demoEmail);
     onAuthSuccess(demoEmail);
   };
@@ -174,7 +160,6 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Ahmet Yılmaz"
-                    required
                     className="form-input"
                   />
                 </div>
@@ -199,7 +184,6 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  required
                   className="form-input"
                 />
               </div>
@@ -208,6 +192,18 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
                 {isSignUp ? 'Kayıt Ol' : 'Giriş Yap'} <LogIn size={16} />
               </button>
             </form>
+
+            {/* Demo description */}
+            <p style={{
+              marginTop: '1.25rem',
+              fontSize: '0.7rem',
+              color: 'var(--text-faint)',
+              textAlign: 'center',
+              lineHeight: 1.6,
+            }}>
+              Bu demo tamamen tarayıcınızda çalışır. Sunucuya hiçbir veri gönderilmez.<br />
+              Gerçek hesap oluşturulmaz, şifreniz saklanmaz.
+            </p>
 
             <div className="divider" style={{ margin: '1.25rem 0' }}>veya</div>
 
@@ -229,14 +225,19 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem',
           fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em',
           textTransform: 'uppercase', color: 'var(--text-faint)',
+          flexWrap: 'wrap',
         }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
             <ShieldCheck size={12} style={{ color: 'var(--status-success)' }} />
-            Yerel Sandbox
+            Yerel Demo Sandbox
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
             <Lock size={12} />
             256-bit Güvenlik
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+            <FlaskConical size={12} style={{ color: 'var(--status-warning)' }} />
+            Simülasyon Modu
           </span>
         </div>
       </div>

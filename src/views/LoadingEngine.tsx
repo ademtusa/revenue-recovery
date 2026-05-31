@@ -77,9 +77,32 @@ export function LoadingEngine({ onComplete }: LoadingEngineProps) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '2rem',
+      paddingTop: '80px',   /* ghost topbar yüksekliği + nefes payı */
       position: 'relative',
       overflow: 'hidden',
     }}>
+      {/* Ghost topbar — sayfa geçişi tutarlılığı için (Logo + Brand) */}
+      <header style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0,
+        height: '64px',
+        zIndex: 100,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '0 1.5rem',
+        background: 'rgba(5, 5, 8, 0.92)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        borderBottom: '1px solid var(--border)',
+      }}>
+        <div className="topbar-brand">
+          <div className="topbar-brand-icon">
+            <Cpu size={18} className="animate-pulse-slow" />
+          </div>
+          <span className="topbar-brand-name">RRIO RRS</span>
+        </div>
+      </header>
+
       {/* Ambient blobs */}
       <div style={{
         position: 'absolute', top: '15%', left: '5%', width: '450px', height: '450px',

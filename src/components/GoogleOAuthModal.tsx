@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Mail, ArrowRight, ShieldCheck, CheckCircle2, Lock, Cpu } from 'lucide-react';
+import { X, Mail, ArrowRight, ShieldCheck, CheckCircle2, Lock, Cpu, AlertTriangle } from 'lucide-react';
 
 interface GoogleOAuthModalProps {
   onClose: () => void;
@@ -35,6 +35,20 @@ export function GoogleOAuthModal({ onClose, onSuccess }: GoogleOAuthModalProps) 
           }}>
             <X size={18} />
           </button>
+        </div>
+
+        {/* Demo Warning Banner */}
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', gap: '0.625rem',
+          padding: '0.75rem 1.5rem',
+          background: 'rgba(255,208,67,0.07)',
+          borderBottom: '1px solid rgba(255,208,67,0.18)',
+        }}>
+          <AlertTriangle size={14} style={{ color: 'var(--status-warning)', flexShrink: 0, marginTop: '1px' }} />
+          <p style={{ fontSize: '0.75rem', color: 'var(--status-warning)', lineHeight: 1.55, margin: 0 }}>
+            Bu bir <strong>demo simülasyonudur</strong>. Gerçek Google hesabınıza bağlanılmaz,
+            hiçbir veri okunmaz veya saklanmaz.
+          </p>
         </div>
 
         {/* Body */}
@@ -87,7 +101,7 @@ export function GoogleOAuthModal({ onClose, onSuccess }: GoogleOAuthModalProps) 
             fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.65,
             textAlign: 'center', marginBottom: '1.75rem',
           }}>
-            Gmail & Takvim akışlarınız analiz edilerek sessiz kalmış fırsatlar,
+            Gmail &amp; Takvim akışlarınız analiz edilerek sessiz kalmış fırsatlar,
             unutulmuş teklifler ve soğuyan ilişkiler tespit edilecektir.
             Yalnızca metadata ve iletişim frekansı okunur.
           </p>
