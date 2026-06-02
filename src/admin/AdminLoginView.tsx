@@ -1,34 +1,33 @@
 import { useState } from 'react';
 import { Cpu, Lock, LogIn, AlertCircle } from 'lucide-react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 interface AdminLoginViewProps {
   onSuccess: () => void;
 }
-
-const ADMIN_PASSWORD_KEY = 'rrio_admin_password';
-const DEFAULT_PASSWORD = 'admin2024rrio';
 
 export function AdminLoginView({ onSuccess }: AdminLoginViewProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    setTimeout(() => {
-      const storedPassword = localStorage.getItem(ADMIN_PASSWORD_KEY) || DEFAULT_PASSWORD;
-      if (password === storedPassword) {
-        localStorage.setItem('rrio_admin_auth', 'true');
-        onSuccess();
-      } else {
-        setError('Incorrect password. Please try again.');
-        setPassword('');
-      }
+    try {
+      await signInWithEmailAndPassword(auth, 'admin@creaizen.com', password);
+      localStorage.setItem('rrio_admin_auth', 'true');
+      onSuccess();
+    } catch (err: any) {
+      console.error(err);
+      setError('Incorrect password or account not created yet.');
+      setPassword('');
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (
