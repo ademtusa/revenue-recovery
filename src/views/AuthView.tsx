@@ -191,7 +191,7 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Ahmet Yılmaz"
+                    placeholder="John Doe"
                     className="form-input"
                   />
                 </div>
@@ -257,7 +257,7 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
                   setEmail('admin@creaizen.com');
                   setPassword('');
                   setIsSignUp(false);
-                  document.querySelector('input[type="password"]')?.focus();
+                  (document.querySelector('input[type="password"]') as HTMLInputElement)?.focus();
                 }}
                 style={{
                   background: 'none',

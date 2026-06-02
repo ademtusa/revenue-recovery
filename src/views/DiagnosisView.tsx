@@ -541,7 +541,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                   {[
-                    { color: 'var(--status-warning)', label: 'Bekleyen', count: records.filter(r => r.status === 'PENDING').length },
+                    { color: 'var(--status-warning)', label: 'Pending', count: records.filter(r => r.status === 'PENDING').length },
                     { color: 'var(--accent-primary)', label: 'In Progress', count: records.filter(r => r.status === 'ACTION_TAKEN').length },
                     { color: 'var(--status-success)', label: 'Closed', count: records.filter(r => r.status === 'CLOSED').length },
                   ].map(item => (
@@ -602,7 +602,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
           <div className="lifecycle-grid">
             {[
               { cls: 'ls-detect', num: '1', name: 'DETECT', desc: 'Catch Leakage' },
-              { cls: 'ls-classify', num: '2', name: 'CLASSIFY', desc: 'Categoryyi Belirle' },
+              { cls: 'ls-classify', num: '2', name: 'CLASSIFY', desc: 'Identify Category' },
               { cls: 'ls-explain', num: '3', name: 'ANALYZE', desc: 'Examine Cause' },
               { cls: 'ls-recommend', num: '4', name: 'STRATEGY', desc: 'Determine Method' },
               { cls: 'ls-action', num: '5', name: 'ACTION', desc: 'Initiate Contact' },
@@ -667,7 +667,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
               </div>
 
               <div className="kpi-card kpi-success">
-                <span className="kpi-label">Recoverable Gelir Potansiyeli</span>
+                <span className="kpi-label">Recoverable Revenue Potential</span>
                 <div className="kpi-value kv-success">
                   <DollarSign size={22} /> {recoverablePotential.toLocaleString()}
                 </div>
@@ -686,7 +686,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             {/* Category Tabs */}
             <div className="tabs-scroll-container" style={{ marginBottom: '1.25rem' }}>
               {[
-                { key: 'ABANDONED_OPPORTUNITY', label: 'Abandoned Opportunitylar', icon: <Zap size={15} /> },
+                { key: 'ABANDONED_OPPORTUNITY', label: 'Abandoned Opportunities', icon: <Zap size={15} /> },
                 { key: 'SUBSCRIPTION_DECAY', label: 'Subscription Decay', icon: <Activity size={15} /> },
                 { key: 'COLD_RELATIONSHIP', label: 'Cooling Relationships', icon: <Users size={15} /> },
               ].map((tab) => (
@@ -800,7 +800,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                         </div>
                         <div className="premium-panel">
                           <span style={{ display: 'block', fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: '0.3rem' }}>
-                            Riskteki Gelir
+                            Revenue at Risk
                           </span>
                           <span style={{
                             display: 'flex', alignItems: 'center', gap: '0.2rem',
@@ -980,7 +980,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                                 <Zap size={18} style={{ color: 'var(--neon-orange)', flexShrink: 0 }} className="animate-pulse-slow" />
                                 <div>
                                   <span style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--neon-orange)' }}>
-                                    Otomatik Kurtarma Sırasında
+                                    During Automatic Recovery
                                   </span>
                                   <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
                                     The system will automatically trigger the template within 2 hours.
@@ -995,7 +995,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                                   <Button variant="glow-blue" onClick={() => startAction(record, 'email')}
                                     style={{ fontSize: '0.72rem', padding: '0.5rem 0.75rem', minHeight: '40px' }}>
-                                    <Mail size={13} /> E-Posta
+                                    <Mail size={13} /> Email
                                   </Button>
                                   <Button variant="glow-orange" onClick={() => startAction(record, 'whatsapp')}
                                     style={{ fontSize: '0.72rem', padding: '0.5rem 0.75rem', minHeight: '40px' }}>
@@ -1003,7 +1003,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                                   </Button>
                                   <Button variant="outline" onClick={() => startAction(record, 'phone')}
                                     style={{ fontSize: '0.72rem', padding: '0.5rem 0.75rem', minHeight: '40px' }}>
-                                    <Phone size={13} /> Telefon
+                                    <Phone size={13} /> Phone
                                   </Button>
                                   <Button variant="outline" onClick={() => startAction(record, 'linkedin')}
                                     style={{ fontSize: '0.72rem', padding: '0.5rem 0.75rem', minHeight: '40px', color: 'var(--status-info)', borderColor: 'rgba(167,139,250,0.3)' }}>
@@ -1033,19 +1033,19 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                                   {activeAction.type === 'email' ? (
                                     <>
                                       <div className="form-group">
-                                        <label className="form-label">Alıcı E-Posta</label>
+                                        <label className="form-label">Recipient Email</label>
                                         <input type="email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)}
                                           placeholder="ornek@sirket.com" className="form-input" style={{ minHeight: '40px', padding: '0.5rem 0.875rem', fontSize: '0.8125rem' }} />
                                       </div>
                                       <div className="form-group">
-                                        <label className="form-label">E-Posta Konusu</label>
+                                        <label className="form-label">Email Subject</label>
                                         <input type="text" value={editedSubject} onChange={(e) => setEditedSubject(e.target.value)}
                                           className="form-input" style={{ minHeight: '40px', padding: '0.5rem 0.875rem', fontSize: '0.8125rem' }} />
                                       </div>
                                     </>
                                   ) : (
                                     <div className="form-group">
-                                      <label className="form-label">WhatsApp Numarası</label>
+                                      <label className="form-label">WhatsApp Number</label>
                                       <input type="text" value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)}
                                         placeholder="+905551234567" className="form-input" style={{ minHeight: '40px', padding: '0.5rem 0.875rem', fontSize: '0.8125rem' }} />
                                     </div>
@@ -1059,7 +1059,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
 
                                   <Button variant="glow-green" style={{ width: '100%', fontSize: '0.8rem', minHeight: '44px' }}
                                     onClick={() => executeAction(record)}>
-                                    Aksiyonu Kaydet & Tetikle <Zap size={14} />
+                                    Save & Trigger Action <Zap size={14} />
                                   </Button>
                                 </div>
                               </div>
@@ -1072,11 +1072,11 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                           <div className="stack-sm">
                             <div className="action-taken-panel">
                               <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', fontWeight: 600, color: 'var(--accent-primary)' }}>
-                                <CheckCircle size={15} /> Aksiyon Alındı: {record.actionType}
+                                <CheckCircle size={15} /> Action Taken: {record.actionType}
                               </p>
                               {(record.clientEmail || record.clientPhone) && (
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.375rem', paddingLeft: '1.5rem' }}>
-                                  {record.clientEmail && <div>E-Posta: <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{record.clientEmail}</span></div>}
+                                  {record.clientEmail && <div>Email: <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{record.clientEmail}</span></div>}
                                   {record.clientPhone && <div>Tel: <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{record.clientPhone}</span></div>}
                                 </div>
                               )}
@@ -1092,7 +1092,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                                   onChange={(e) => setSelectedOutcome({ ...selectedOutcome, [record.id]: e.target.value as OutcomeType })}
                                 >
                                   <option value="" disabled>Select outcome...</option>
-                                  <option value="recovered">✅ Recovered (Gelir Geri Kazanıldı)</option>
+                                  <option value="recovered">✅ Recovered</option>
                                   <option value="replied">💬 Replied (Communication Active)</option>
                                   <option value="reopened">🔄 Reopened</option>
                                   <option value="no_response">⏳ No Response</option>
@@ -1101,7 +1101,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                                 <Button variant="glow-green" disabled={!selectedOutcome[record.id]}
                                   onClick={() => handleCloseLoop(record.id)}
                                   style={{ minHeight: '40px', padding: '0.5rem 1.25rem', fontSize: '0.8rem', flexShrink: 0 }}>
-                                  <Check size={14} /> Kaydet
+                                  <Check size={14} /> Save
                                 </Button>
                               </div>
                             </div>
@@ -1151,7 +1151,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                       <tr>
                         <th>Client / Project</th>
                         <th>Category</th>
-                        <th>Risk Tutarı</th>
+                        <th>Amount at Risk</th>
                         <th style={{ textAlign: 'right' }}>Status</th>
                       </tr>
                     </thead>
@@ -1230,12 +1230,12 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                 <span className="kpi-note">Collected definite revenue.</span>
               </div>
               <div className="kpi-card kpi-primary">
-                <span className="kpi-label">Korunan Ciro</span>
+                <span className="kpi-label">Protected Revenue</span>
                 <div className="kpi-value kv-primary"><DollarSign size={20} /> {preservedRevenue.toLocaleString()}</div>
                 <span className="kpi-note">Value of refreshed relationship.</span>
               </div>
               <div className="kpi-card kpi-danger">
-                <span className="kpi-label">Kaybedilen / Churn</span>
+                <span className="kpi-label">Lost / Churn</span>
                 <div className="kpi-value kv-danger"><DollarSign size={20} /> {churnedRevenue.toLocaleString()}</div>
                 <span className="kpi-note">Unreachable budget amount.</span>
               </div>
@@ -1268,12 +1268,12 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--status-danger)' }}>{panel.before}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.35)', padding: '0.625rem 0.875rem', borderRadius: 'var(--r-xs)', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sonrası:</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>After:</span>
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--status-success)' }}>{panel.after}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.625rem', borderTop: '1px solid var(--border)' }}>
                         <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-faint)' }}>Resulting:</span>
-                        <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)' }}>{panel.count} Firma</span>
+                        <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)' }}>{panel.count} Companies</span>
                       </div>
                     </div>
                   </div>
@@ -1294,7 +1294,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                         <th>Client / Project</th>
                         <th>Category</th>
                         <th>Recovered Revenue</th>
-                        <th style={{ textAlign: 'right' }}>Kapatılma Statusu</th>
+                        <th style={{ textAlign: 'right' }}>Closing Status</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1328,7 +1328,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
           <div className="section-title-row">
             <span className="section-title-text">
               <Users size={18} style={{ color: 'var(--neon-orange)' }} />
-              Lead Kayıt Havuzu
+              Lead Capture Pool
             </span>
             {leadCaptures.length > 0 && (
               <Button variant="outline" onClick={handleExportLeads}
@@ -1349,10 +1349,10 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>E-Posta Adresi</th>
+                      <th>Email Address</th>
                       <th>Diagnosis Date</th>
-                      <th>Firma Sayısı</th>
-                      <th style={{ textAlign: 'right' }}>Recoverable Kayıp</th>
+                      <th>Company Count</th>
+                      <th style={{ textAlign: 'right' }}>Recoverable Loss</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1360,7 +1360,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                       <tr key={lc.id}>
                         <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{lc.email}</td>
                         <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{lc.capturedAt}</td>
-                        <td style={{ color: 'var(--text-main)' }}>{lc.companyCount} Firma</td>
+                        <td style={{ color: 'var(--text-main)' }}>{lc.companyCount} Companies</td>
                         <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--status-success)' }}>
                           ${lc.estimatedLoss.toLocaleString()}
                         </td>
@@ -1373,12 +1373,12 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
           </div>
         </div>
 
-        {/* Kullanıcı Geri Bildirim Havuzu */}
+        {/* User Feedback Pool */}
         <div style={{ marginTop: '3rem' }}>
           <div className="section-title-row">
             <span className="section-title-text">
               <MessageSquare size={18} style={{ color: 'var(--accent-primary)' }} />
-              Kullanıcı Geri Bildirim Havuzu
+              User Feedback Pool
             </span>
             <Button
               variant="outline"
@@ -1400,9 +1400,9 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>E-Posta Adresi</th>
+                      <th>Email Address</th>
                       <th>Date</th>
-                      <th>Fayda Seviyesi</th>
+                      <th>Usefulness Level</th>
                       <th>Most Valuable Part</th>
                       <th>Feedback / Suggestion</th>
                     </tr>

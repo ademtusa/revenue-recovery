@@ -77,7 +77,7 @@ export function AdminFeedback() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
-            Kullanıcı Feedbackleri & Hata Raporları
+            User Feedbacks & Bug Reports
           </h3>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-faint)' }}>
             Real-time field data collected from live test users

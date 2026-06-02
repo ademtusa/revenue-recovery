@@ -24,7 +24,7 @@ export function PricingModal({ onClose, onPlanUpdated }: PricingModalProps) {
   };
 
   const handleDemoFill = () => {
-    setCardName('Ahmet Yılmaz');
+    setCardName('John Doe');
     setCardNumber('4242 4242 4242 4242');
     setCardExpiry('12/28');
     setCardCvc('123');
@@ -353,7 +353,7 @@ export function PricingModal({ onClose, onPlanUpdated }: PricingModalProps) {
                       required
                       value={cardName}
                       onChange={(e) => setCardName(e.target.value)}
-                      placeholder="Ahmet Yılmaz"
+                      placeholder="John Doe"
                       className="form-input"
                       style={{ minHeight: '40px' }}
                       disabled={paymentStatus === 'processing'}
