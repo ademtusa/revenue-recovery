@@ -19,19 +19,19 @@ interface PipelineViewProps {
 
 const CATEGORY_CONFIG: Record<Category, { label: string; icon: React.ReactNode; color: string; rgb: string }> = {
   ABANDONED_OPPORTUNITY: {
-    label: 'Terk Edilmiş Fırsat',
+    label: 'Abandoned Opportunity',
     icon: <Zap size={11} />,
     color: 'var(--accent-primary)',
     rgb: '13,211,255',
   },
   SUBSCRIPTION_DECAY: {
-    label: 'Abonelik Çürümesi',
+    label: 'Subscription Decay',
     icon: <Activity size={11} />,
     color: 'var(--neon-orange)',
     rgb: '255,126,71',
   },
   COLD_RELATIONSHIP: {
-    label: 'Soğuk İlişki',
+    label: 'Cold Relationship',
     icon: <Users size={11} />,
     color: 'var(--status-info)',
     rgb: '167,139,250',
@@ -50,10 +50,10 @@ interface KanbanColumn {
 }
 
 const OUTCOME_LABELS: Record<string, string> = {
-  recovered: '✅ Kurtarıldı',
-  replied: '💬 Yanıt Alındı',
-  reopened: '🔄 Yeniden Açıldı',
-  no_response: '⏳ Cevap Yok',
+  recovered: '✅ Recovered',
+  replied: '💬 Replied',
+  reopened: '🔄 Reopened',
+  no_response: '⏳ No Response',
   churned: '❌ Churn',
 };
 
@@ -116,8 +116,8 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
   const columns: KanbanColumn[] = [
     {
       id: 'PENDING',
-      title: 'BEKLEYENLER',
-      subtitle: 'Aksiyon alınmayı bekliyor',
+      title: 'PENDING',
+      subtitle: 'Waiting for action',
       icon: <Clock size={15} />,
       color: 'var(--status-warning)',
       bgColor: 'rgba(255,208,67,0.04)',
@@ -126,8 +126,8 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
     },
     {
       id: 'ACTION_TAKEN',
-      title: 'İŞLEMDE',
-      subtitle: 'Temas kuruldu, yanıt bekleniyor',
+      title: 'IN PROGRESS',
+      subtitle: 'Contact established, awaiting response',
       icon: <TrendingUp size={15} />,
       color: 'var(--accent-primary)',
       bgColor: 'rgba(13,211,255,0.04)',
@@ -136,8 +136,8 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
     },
     {
       id: 'CLOSED',
-      title: 'KAPATILDI',
-      subtitle: 'Döngü sonuçlandı',
+      title: 'CLOSED',
+      subtitle: 'Loop concluded',
       icon: <CheckCircle size={15} />,
       color: 'var(--status-success)',
       bgColor: 'rgba(56,242,150,0.04)',
@@ -150,7 +150,7 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem' }}>
         <div className="spinner spinner-lg" />
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Pipeline yükleniyor...</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Loading pipeline...</p>
       </div>
     );
   }
@@ -171,7 +171,7 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
             </div>
             <div className="topbar-actions">
               <button className="btn btn-outline" style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }} onClick={onNavigateDiagnosis}>
-                <ArrowLeft size={14} /> Teşhis Ekranı
+                <ArrowLeft size={14} /> Diagnostic Screen
               </button>
             </div>
           </div>
@@ -190,14 +190,14 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
               <BarChart2 size={32} />
             </div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem' }}>
-              Kanban Pipeline Görünümü
+              Kanban Pipeline View
             </h2>
             <p style={{ fontSize: '1rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2rem' }}>
-              "Gelişmiş Pipeline Görünümü" ile müşterilerinizi Kanban tahtasında yönetebilir, süreçler arası sürükle-bırak yapabilir ve kurtarma operasyonlarını görselleştirebilirsiniz. Bu özellik sadece <b>Pro</b> ve <b>Agency</b> planlarında mevcuttur.
+              With "Advanced Pipeline View", you can manage your customers on a Kanban board, drag and drop between processes, and visualize recovery operations. This feature is only available on <b>Pro</b> and <b>Agency</b> plans.
             </p>
             <button className="btn btn-glow-orange" style={{ padding: '0.875rem 2rem', fontSize: '1rem', fontWeight: 700 }}
               onClick={() => setShowPricing(true)}>
-              Pro Plana Geç (<DollarSign size={16} style={{ marginLeft: -2 }}/>97/ay)
+              Upgrade to Pro (<DollarSign size={16} style={{ marginLeft: -2 }}/>97/mo)
             </button>
           </div>
         </div>
@@ -240,7 +240,7 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
               style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}
               onClick={onNavigateDiagnosis}
             >
-              <ArrowLeft size={14} /> Teşhis Ekranı
+              <ArrowLeft size={14} /> Diagnostic Screen
             </button>
             <button
               className="btn btn-outline"
@@ -255,21 +255,21 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
               style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}
               onClick={onReset}
             >
-              Yeniden Tara
+              Rescan
             </button>
             <button
               className="btn btn-danger"
               style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}
               onClick={onDemoReset}
-              title="Tüm demo verisini sil ve sıfırla"
+              title="Delete all demo data and reset"
             >
-              Demo'yu Sıfırla
+              Reset Demo
             </button>
             <span className="user-pill">
               <User size={12} />
               {userEmail.split('@')[0]}
             </span>
-            <Button variant="outline" className="btn-icon" onClick={onLogout} title="Çıkış">
+            <Button variant="outline" className="btn-icon" onClick={onLogout} title="Logout">
               <LogOut size={17} />
             </Button>
           </div>
@@ -289,14 +289,14 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
             marginBottom: '0.375rem', color: 'var(--text-main)',
             lineHeight: 1.25,
           }}>
-            Kurtarma{' '}
+            Recovery{' '}
             <span style={{ color: 'var(--accent-primary)', textShadow: '0 0 20px var(--glow-primary)' }}>
-              Pipeline Görünümü
+              Pipeline View
             </span>
           </h1>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: '560px' }}>
-            {records.length} kayıt — ${totalLeakage.toLocaleString()} toplam risk.
-            Kurtarma süreçlerinin anlık durumu.
+            {records.length} records — ${totalLeakage.toLocaleString()} total risk.
+            Instant status of recovery processes.
           </p>
         </div>
 
@@ -308,32 +308,32 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
           marginBottom: '2rem',
         }}>
           <div className="kpi-card kpi-warning">
-            <span className="kpi-label">Bekleyen</span>
+            <span className="kpi-label">Pending</span>
             <div className="kpi-value kv-warning" style={{ fontSize: '2.25rem' }}>
               {pending.length}
             </div>
-            <span className="kpi-note">Aksiyon bekliyor.</span>
+            <span className="kpi-note">Awaiting action.</span>
           </div>
           <div className="kpi-card kpi-primary">
-            <span className="kpi-label">İşlemde</span>
+            <span className="kpi-label">In Progress</span>
             <div className="kpi-value kv-primary" style={{ fontSize: '2.25rem' }}>
               {actionTaken.length}
             </div>
-            <span className="kpi-note">Yanıt bekleniyor.</span>
+            <span className="kpi-note">Awaiting response.</span>
           </div>
           <div className="kpi-card kpi-success">
-            <span className="kpi-label">Kurtarılan Ciro</span>
+            <span className="kpi-label">Recovered Revenue</span>
             <div className="kpi-value kv-success">
               <DollarSign size={20} /> {recoveredRevenue.toLocaleString()}
             </div>
-            <span className="kpi-note">Geri kazanılan toplam.</span>
+            <span className="kpi-note">Total recovered.</span>
           </div>
           <div className="kpi-card kpi-orange">
-            <span className="kpi-label">Başarı Oranı</span>
+            <span className="kpi-label">Success Rate</span>
             <div className="kpi-value kv-orange" style={{ fontSize: '2.25rem' }}>
               %{successRate}
             </div>
-            <span className="kpi-note">Kapatılmış döngü başarısı.</span>
+            <span className="kpi-note">Closed loop success.</span>
           </div>
         </div>
 
@@ -414,7 +414,7 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
                       color: 'var(--text-faint)',
                     }}>
                       <CheckCircle size={28} style={{ opacity: 0.3 }} />
-                      <span style={{ fontSize: '0.8125rem' }}>Bu sütunda kayıt yok.</span>
+                      <span style={{ fontSize: '0.8125rem' }}>No records in this column.</span>
                     </div>
                   )}
 
@@ -425,7 +425,7 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
                         key={record.id}
                         onClick={onNavigateDiagnosis}
                         className="pipeline-card"
-                        title="Detaylı görünüm için tıklayın"
+                        title="Click for detailed view"
                       >
                         {/* Category + Urgency row */}
                         <div style={{
@@ -511,7 +511,7 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
                           {record.status === 'PENDING' && (
                             <span style={{ fontSize: '0.62rem', color: 'var(--text-faint)' }}>
                               <AlertTriangle size={10} style={{ display: 'inline', marginRight: '3px', color: 'var(--status-warning)' }} />
-                              Bekliyor
+                              Pending
                             </span>
                           )}
                         </div>
@@ -527,7 +527,7 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
                               textTransform: 'uppercase', letterSpacing: '0.07em',
                               color: 'var(--text-faint)',
                             }}>
-                              Öncelik Skoru
+                              Priority Score
                             </span>
                             <span style={{ fontSize: '0.62rem', fontWeight: 700, color: col.color }}>
                               {record.priorityScore}/100
@@ -559,7 +559,7 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   }}>
                     <span style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      Toplam Risk
+                      Total Risk
                     </span>
                     <span style={{ fontSize: '0.875rem', fontWeight: 800, color: col.color }}>
                       ${col.records.reduce((s, r) => s + r.revenueImpact, 0).toLocaleString()}
@@ -573,7 +573,7 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
 
         {/* Mobile scroll hint */}
         <div className="kanban-scroll-hint">
-          <span>← Kaydırarak tüm kolonları görüntüleyin →</span>
+          <span>← Swipe to view all columns →</span>
         </div>
 
         {/* ── BOTTOM CTA ── */}
@@ -585,15 +585,15 @@ export function PipelineView({ onNavigateDiagnosis, onReset, userEmail, onLogout
           borderRadius: 'var(--r-lg)',
         }}>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem', lineHeight: 1.6 }}>
-            Kart detayları, AI mesaj şablonları ve döngü kapatma için{' '}
-            <strong style={{ color: 'var(--text-main)' }}>Teşhis Ekranı</strong>'na geçin.
+            For card details, AI message templates, and loop closing, switch to{' '}
+            <strong style={{ color: 'var(--text-main)' }}>Diagnostic Screen</strong>.
           </p>
           <button
             className="btn btn-glow-blue"
             onClick={onNavigateDiagnosis}
             style={{ minHeight: '44px', padding: '0.625rem 1.75rem', fontSize: '0.875rem' }}
           >
-            <ArrowLeft size={16} /> Teşhis Ekranına Dön
+            <ArrowLeft size={16} /> Back to Diagnostic Screen
           </button>
         </div>
 

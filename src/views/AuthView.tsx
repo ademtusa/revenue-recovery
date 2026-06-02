@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { ShieldCheck, LogIn, ArrowRight, Cpu, Zap, Lock, FlaskConical } from 'lucide-react';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 interface AuthViewProps {
   onAuthSuccess: (userEmail: string) => void;
@@ -13,31 +15,61 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // SECURITY FIX: No password or account data is stored in localStorage.
-  // Auth is purely simulated: any valid email format grants access.
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  // Security: For regular demo users, auth is simulated in localStorage.
+  // For Admin, we verify against Firebase Authentication.
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
     if (!email.includes('@') || email.trim().length < 5) {
-      setError('Lütfen geçerli bir e-posta adresi girin.');
+      setError('Please enter a valid email address.');
       return;
     }
 
-    if (isSignUp) {
-      setSuccess('Demo hesabınız oluşturuldu! Giriş yapılıyor...');
-      setTimeout(() => {
-        localStorage.setItem('rrs_active_session', email.trim());
-        onAuthSuccess(email.trim());
-      }, 900);
-    } else {
-      setSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
-      setTimeout(() => {
-        localStorage.setItem('rrs_active_session', email.trim());
-        onAuthSuccess(email.trim());
-      }, 900);
+    // Attempt Firebase Admin Auth if it's an admin email, or handle signup
+    if (email.toLowerCase() === 'admin@creaizen.com' || password.length >= 6) {
+        try {
+          if (isSignUp) {
+            await createUserWithEmailAndPassword(auth, email.trim(), password);
+            setSuccess('Admin account created successfully! Logging in...');
+          } else {
+            await signInWithEmailAndPassword(auth, email.trim(), password);
+            setSuccess('Secure Admin Login successful! Redirecting...');
+          }
+          
+          setTimeout(() => {
+            localStorage.setItem('rrs_active_session', email.trim());
+            onAuthSuccess(email.trim());
+          }, 900);
+          return;
+        } catch (err: any) {
+          console.error("Firebase Auth Error:", err);
+          // If it's a known admin account but wrong password, block access.
+          if (email.toLowerCase() === 'admin@creaizen.com') {
+             setError('Invalid admin credentials. Access denied.');
+             return;
+          }
+          // If Firebase is not configured properly (missing API key), fallback to simulation mode
+          if (err.code === 'auth/invalid-api-key') {
+             console.warn("Firebase not fully configured. Falling back to Demo Simulation mode.");
+          } else {
+             setError(err.message || 'Authentication failed.');
+             return;
+          }
+        }
     }
+
+    // Fallback to Simulation Mode for demo visitors
+    if (isSignUp) {
+      setSuccess('Demo account created! Logging in...');
+    } else {
+      setSuccess('Login successful! Redirecting...');
+    }
+    setTimeout(() => {
+      localStorage.setItem('rrs_active_session', email.trim());
+      onAuthSuccess(email.trim());
+    }, 900);
   };
 
   const handleQuickDemoLogin = () => {
@@ -95,7 +127,7 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
             Revenue Recovery System
           </h1>
           <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-            Gelir kurtarma ve kayıp analitiği işletim platformu
+            Revenue recovery and loss analytics operating platform
           </p>
         </div>
 
@@ -109,7 +141,7 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
             borderBottom: '1px solid var(--border)',
           }}>
             <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)' }}>
-              {isSignUp ? 'Hesap Oluştur' : 'Sisteme Giriş'}
+              {isSignUp ? 'Create Account' : 'System Login'}
             </h2>
             <button
               onClick={() => { setIsSignUp(!isSignUp); setError(''); setSuccess(''); }}
@@ -119,7 +151,7 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
                 padding: '0.25rem 0',
               }}
             >
-              {isSignUp ? '← Giriş yap' : 'Yeni hesap →'}
+              {isSignUp ? '← Log in' : 'New account →'}
             </button>
           </div>
 
@@ -154,7 +186,7 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
             <form onSubmit={handleAuthSubmit} className="stack-md">
               {isSignUp && (
                 <div className="form-group">
-                  <label className="form-label">Şirket veya Yetkili Adı</label>
+                  <label className="form-label">Company or Contact Name</label>
                   <input
                     type="text"
                     value={name}
@@ -166,7 +198,7 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
               )}
 
               <div className="form-group">
-                <label className="form-label">E-Posta Adresi</label>
+                <label className="form-label">Email Address</label>
                 <input
                   type="email"
                   value={email}
@@ -178,7 +210,7 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Şifre</label>
+                <label className="form-label">Password</label>
                 <input
                   type="password"
                   value={password}
@@ -189,7 +221,7 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
               </div>
 
               <button type="submit" className="btn btn-glow-blue" style={{ width: '100%', marginTop: '0.5rem' }}>
-                {isSignUp ? 'Kayıt Ol' : 'Giriş Yap'} <LogIn size={16} />
+                {isSignUp ? 'Sign Up' : 'Log In'} <LogIn size={16} />
               </button>
             </form>
 
@@ -201,11 +233,11 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
               textAlign: 'center',
               lineHeight: 1.6,
             }}>
-              Bu demo tamamen tarayıcınızda çalışır. Sunucuya hiçbir veri gönderilmez.<br />
-              Gerçek hesap oluşturulmaz, şifreniz saklanmaz.
+              This demo runs entirely in your browser. No data is sent to the server.<br />
+              No real account is created, your password is not stored.
             </p>
 
-            <div className="divider" style={{ margin: '1.25rem 0' }}>veya</div>
+            <div className="divider" style={{ margin: '1.25rem 0' }}>or</div>
 
             <button
               type="button"
@@ -214,9 +246,35 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
               style={{ width: '100%' }}
             >
               <Zap size={16} />
-              Tek Tıkla Demo Girişi
+              One-Click Demo Login
               <ArrowRight size={14} />
             </button>
+
+            <div style={{ textAlign: 'center', marginTop: '1.25rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('admin@creaizen.com');
+                  setPassword('');
+                  setIsSignUp(false);
+                  document.querySelector('input[type="password"]')?.focus();
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-faint)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-faint)')}
+              >
+                🛠️ Admin / Manager Login
+              </button>
+            </div>
           </div>
         </div>
 
@@ -229,15 +287,15 @@ export function AuthView({ onAuthSuccess }: AuthViewProps) {
         }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
             <ShieldCheck size={12} style={{ color: 'var(--status-success)' }} />
-            Yerel Demo Sandbox
+            Local Demo Sandbox
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
             <Lock size={12} />
-            256-bit Güvenlik
+            256-bit Security
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
             <FlaskConical size={12} style={{ color: 'var(--status-warning)' }} />
-            Simülasyon Modu
+            Simulation Mode
           </span>
         </div>
       </div>

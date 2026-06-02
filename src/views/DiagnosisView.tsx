@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import {
   DollarSign, Download, Clock, Target, Users, Zap, CheckCircle,
   Activity, MessageSquare, AlertCircle, Award, XCircle, Check,
-  Settings, Cpu, Mail, ShieldAlert, LogOut, ArrowRight, Phone
+  Settings, Cpu, Mail, ShieldAlert, LogOut, ArrowRight, Phone, Lock
 } from 'lucide-react';
 import { Button } from '../components/Button';
 import { SettingsModal } from '../components/SettingsModal';
 import { PricingModal } from '../components/PricingModal';
-import { getRecords, updateRecord, saveLeadCapture, getLeadCaptures, getUserPlan } from '../lib/db';
+import { getRecords, updateRecord, saveLeadCapture, getLeadCaptures, getUserPlan, getFeedbacks } from '../lib/db';
 import type { IntelligenceRecord, Category, ActionType, OutcomeType, LeadCaptureRecord, PlanType } from '../lib/db';
 
 const Linkedin = ({ size = 16, className = "" }: { size?: number; className?: string }) => (
@@ -75,9 +75,9 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
 
   const [feedbackResponses, setFeedbackResponses] = useState<any[]>([]);
 
-  const loadFeedback = () => {
-    const feedbackStr = localStorage.getItem('rrio_feedback_responses');
-    setFeedbackResponses(feedbackStr ? JSON.parse(feedbackStr) : []);
+  const loadFeedback = async () => {
+    const feedback = await getFeedbacks();
+    setFeedbackResponses(feedback);
   };
 
   const loadData = async () => {
@@ -96,8 +96,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
       if (active) {
         setRecords(data);
         setLeadCaptures(leads);
-        const feedbackStr = localStorage.getItem('rrio_feedback_responses');
-        setFeedbackResponses(feedbackStr ? JSON.parse(feedbackStr) : []);
+        getFeedbacks().then(fb => setFeedbackResponses(fb));
         setLoading(false);
       }
     });
@@ -110,7 +109,12 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
   };
 
   const handleQuickAction = async (record: IntelligenceRecord, type: 'phone' | 'linkedin') => {
-    const actionType: ActionType = type === 'phone' ? 'Telefonla Arandı' : 'Sosyal Ağ / LinkedIn';
+    const actionCount = records.filter(r => r.status !== 'PENDING').length;
+    if (userPlan === 'FREE' && actionCount >= 3) {
+      setShowPricing(true);
+      return;
+    }
+    const actionType: ActionType = type === 'phone' ? 'Phone Call' : 'Social Network / LinkedIn';
     await updateRecord(record.id, { status: 'ACTION_TAKEN', actionType });
     if (type === 'phone' && record.clientPhone) {
       window.open(`tel:${record.clientPhone}`, '_blank');
@@ -123,6 +127,11 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
   };
 
   const startAction = (record: IntelligenceRecord, type: 'email' | 'whatsapp' | 'phone' | 'linkedin') => {
+    const actionCount = records.filter(r => r.status !== 'PENDING').length;
+    if (userPlan === 'FREE' && actionCount >= 3) {
+      setShowPricing(true);
+      return;
+    }
     if (type === 'phone' || type === 'linkedin') {
       handleQuickAction(record, type);
       return;
@@ -133,7 +142,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
     setEditedSubject(`${record.clientName} - ${record.context} Takip`);
     const tone = draftTones[record.id] || 'formal';
     const bodyText = tone === 'friendly'
-      ? record.draftMessage.replace('Ahmet Bey merhaba', 'Ahmet Bey selamlar').replace('Selin Hanım', 'Selin selam').replace('kontrol etmek istedim', 'bir yazayım istedim').replace('bekleriz', 'bekliyorum, sevgiler')
+      ? record.draftMessage.replace('Hi John', 'Hey John').replace('Jane', 'Hey Jane').replace('just checking in', 'wanted to drop a quick line').replace('hope to hear from you', 'looking forward, cheers')
       : record.draftMessage;
     setEditedBody(bodyText);
   };
@@ -144,7 +153,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
       const record = records.find(r => r.id === recordId);
       if (record) {
         const bodyText = tone === 'friendly'
-          ? record.draftMessage.replace('Ahmet Bey merhaba', 'Ahmet Bey selamlar').replace('Selin Hanım', 'Selin selam').replace('kontrol etmek istedim', 'bir yazayım istedim').replace('bekleriz', 'bekliyorum, sevgiler')
+          ? record.draftMessage.replace('Hi John', 'Hey John').replace('Jane', 'Hey Jane').replace('just checking in', 'wanted to drop a quick line').replace('hope to hear from you', 'looking forward, cheers')
           : record.draftMessage;
         setEditedBody(bodyText);
       }
@@ -155,7 +164,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
     if (!activeAction) return;
     const emailToSave = activeAction.type === 'email' ? recipientEmail : record.clientEmail;
     const phoneToSave = activeAction.type === 'whatsapp' ? recipientPhone : record.clientPhone;
-    const actionLabel = activeAction.type === 'email' ? 'E-Posta Gönderildi' : 'WhatsApp / SMS';
+    const actionLabel = activeAction.type === 'email' ? 'Email Sent' : 'WhatsApp / SMS';
     await updateRecord(record.id, {
       status: 'ACTION_TAKEN',
       actionType: actionLabel as ActionType,
@@ -222,16 +231,16 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
   };
 
   const getOutcomeLabel = (outcome?: OutcomeType) => {
-    if (outcome === 'recovered') return 'Kurtarıldı';
-    if (outcome === 'replied') return 'Yanıt Alındı';
-    if (outcome === 'reopened') return 'Yeniden Açıldı';
-    if (outcome === 'no_response') return 'Cevap Yok';
-    if (outcome === 'churned') return 'Kayıp / Churn';
+    if (outcome === 'recovered') return 'Recovered';
+    if (outcome === 'replied') return 'Replied';
+    if (outcome === 'reopened') return 'Reopened';
+    if (outcome === 'no_response') return 'No Response';
+    if (outcome === 'churned') return 'Churned';
     return outcome || '';
   };
 
   const handleExportLeads = () => {
-    let csv = 'data:text/csv;charset=utf-8,E-Posta,Tarih,Firma Sayisi,Hesaplanan Kacak Tutari\n';
+    let csv = 'data:text/csv;charset=utf-8,E-Posta,Date,Company Count,Calculated Leaked Amount\n';
     leadCaptures.forEach(lc => {
       csv += `"${lc.email}","${lc.capturedAt}","${lc.companyCount}","${lc.estimatedLoss}"\n`;
     });
@@ -254,17 +263,17 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
       <tr>
         <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:13px;">
           <strong>${r.clientName}</strong><br/>
-          <small style="color:#64748b;">Yetkili: ${r.contactPerson} | ${r.context}</small>
+          <small style="color:#64748b;">Contact: ${r.contactPerson} | ${r.context}</small>
         </td>
         <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:13px;">
-          ${r.category === 'ABANDONED_OPPORTUNITY' ? 'Terk Edilmiş Fırsat' : r.category === 'SUBSCRIPTION_DECAY' ? 'Abonelik Çürümesi' : 'Soğuk İlişki'}
+          ${r.category === 'ABANDONED_OPPORTUNITY' ? 'Abandoned Opportunity' : r.category === 'SUBSCRIPTION_DECAY' ? 'Subscription Decay' : 'Cold Relationship'}
         </td>
         <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:13px;font-weight:bold;color:${r.urgency === 'CRITICAL' ? '#ef4444' : r.urgency === 'MEDIUM' ? '#f97316' : '#64748b'};">
-          ${r.urgency === 'CRITICAL' ? 'Kritik' : r.urgency === 'MEDIUM' ? 'Orta' : 'Düşük'}
+          ${r.urgency === 'CRITICAL' ? 'Critical' : r.urgency === 'MEDIUM' ? 'Medium' : 'Low'}
         </td>
         <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:13px;font-weight:bold;text-align:right;">$${r.revenueImpact.toLocaleString()}</td>
         <td style="padding:10px 8px;border-bottom:1px solid #e2e8f0;font-size:13px;text-align:right;">
-          ${r.status === 'PENDING' ? 'Bekliyor' : r.status === 'ACTION_TAKEN' ? 'İletişimde' : `Sonuçlandı (${getOutcomeLabel(r.outcome)})`}
+          ${r.status === 'PENDING' ? 'Pending' : r.status === 'ACTION_TAKEN' ? 'Action Taken' : `Concluded (${getOutcomeLabel(r.outcome)})`}
         </td>
       </tr>`).join('');
 
@@ -284,16 +293,16 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
         .footer{text-align:center;font-size:10px;color:#94a3b8;margin-top:60px;border-top:1px solid #e2e8f0;padding-top:20px;}
       </style></head><body>
       <div class="header"><h1>REVENUE RECOVERY SYSTEM (RRS)</h1>
-      <p>Yönetici Raporu | ${new Date().toLocaleDateString('tr-TR')} | ${userEmail}</p></div>
+      <p>Executive Report | ${new Date().toLocaleDateString('tr-TR')} | ${userEmail}</p></div>
       <div class="stats">
-        <div class="stat" style="border-left:4px solid #ef4444;"><span>Toplam Sızıntı</span><strong>$${totalLeakage.toLocaleString()}</strong></div>
-        <div class="stat" style="border-left:4px solid #10b981;"><span>Kurtarılabilir (%45)</span><strong>$${recoverablePotential.toLocaleString()}</strong></div>
-        <div class="stat" style="border-left:4px solid #3b82f6;"><span>Kurtarılan Ciro</span><strong>$${recoveredRevenue.toLocaleString()}</strong></div>
+        <div class="stat" style="border-left:4px solid #ef4444;"><span>Total Leakage</span><strong>$${totalLeakage.toLocaleString()}</strong></div>
+        <div class="stat" style="border-left:4px solid #10b981;"><span>Recoverable (%45)</span><strong>$${recoverablePotential.toLocaleString()}</strong></div>
+        <div class="stat" style="border-left:4px solid #3b82f6;"><span>Recovered Revenue</span><strong>$${recoveredRevenue.toLocaleString()}</strong></div>
       </div>
-      <div style="font-size:16px;font-weight:700;margin-bottom:15px;border-left:4px solid #3b82f6;padding-left:10px;">Tespit Edilen Riskler</div>
-      <table><thead><tr><th>Müşteri / Proje</th><th>Kategori</th><th>Aciliyet</th><th style="text-align:right;">Risk ($)</th><th style="text-align:right;">Durum</th></tr></thead>
+      <div style="font-size:16px;font-weight:700;margin-bottom:15px;border-left:4px solid #3b82f6;padding-left:10px;">Detected Risks</div>
+      <table><thead><tr><th>Client / Project</th><th>Category</th><th>Urgency</th><th style="text-align:right;">Risk ($)</th><th style="text-align:right;">Status</th></tr></thead>
       <tbody>${tableRows}</tbody></table>
-      <div class="footer"><p>RRS Zeka Teşhis Motoru © ${new Date().getFullYear()}</p></div>
+      <div class="footer"><p>RRS Intelligence Diagnosis Engine © ${new Date().getFullYear()}</p></div>
       <script>window.onload=function(){window.print();setTimeout(function(){window.close();},500);}</script>
       </body></html>`);
     printWindow.document.close();
@@ -301,7 +310,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!leadEmail || !leadEmail.includes('@')) { alert('Lütfen geçerli bir e-posta girin.'); return; }
+    if (!leadEmail || !leadEmail.includes('@')) { alert('Please enter a valid email.'); return; }
     await saveLeadCapture(leadEmail, recoverablePotential, records.length);
     setIsLeadCaptured(true);
     setShowLeadCapture(false);
@@ -314,9 +323,9 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
     const pending = records.filter(r => r.status === 'PENDING');
     const alerts = [];
     const decayAlert = pending.find(r => r.category === 'SUBSCRIPTION_DECAY');
-    if (decayAlert) alerts.push({ id: decayAlert.id, title: `Abonelik Riski: ${decayAlert.clientName}`, description: 'Sisteme giriş sıklığında düşüş saptandı. Değer hatırlatıcı temas öneriliyor.', record: decayAlert });
+    if (decayAlert) alerts.push({ id: decayAlert.id, title: `Subscription Risk: ${decayAlert.clientName}`, description: 'Drop in login frequency detected. Value reminder contact is suggested.', record: decayAlert });
     const oppAlert = pending.find(r => r.category === 'ABANDONED_OPPORTUNITY');
-    if (oppAlert) alerts.push({ id: oppAlert.id, title: `Kaçırılan Teklif: ${oppAlert.clientName}`, description: 'Müşteri teklifi açtı ancak 14 gündür takip yapılmadı. Hızlı aksiyon öneriliyor.', record: oppAlert });
+    if (oppAlert) alerts.push({ id: oppAlert.id, title: `Missed Proposal: ${oppAlert.clientName}`, description: 'Client opened the proposal but no follow-up for 14 days. Quick action is suggested.', record: oppAlert });
     return alerts;
   };
 
@@ -325,7 +334,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
           <div className="spinner spinner-lg" style={{ margin: '0 auto 1rem' }} />
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Teşhis verileri analiz ediliyor...</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>Analyzing diagnostic data...</p>
         </div>
       </div>
     );
@@ -358,7 +367,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
           <div className="modal-panel" style={{ maxWidth: '480px' }}>
             <div className="modal-header">
               <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', fontWeight: 700, fontSize: '1.0625rem', color: 'var(--text-main)' }}>
-                <Mail size={20} style={{ color: 'var(--neon-orange)' }} /> Raporunuzu İndirin
+                <Mail size={20} style={{ color: 'var(--neon-orange)' }} /> Download Your Report
               </h3>
               <button onClick={() => setShowLeadCapture(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.25rem' }}>
                 ✕
@@ -366,20 +375,20 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             </div>
             <div className="modal-body">
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: 1.65 }}>
-                Toplam <strong style={{ color: 'var(--text-main)' }}>{records.length} kritik sızıntı</strong> ve{' '}
+                Total <strong style={{ color: 'var(--text-main)' }}>{records.length} critical leakages</strong> ve{' '}
                 <strong style={{ color: 'var(--status-success)' }}>${recoverablePotential.toLocaleString()}</strong>{' '}
-                geri kazanılabilir ciro tespit edildi. PDF raporu için e-posta adresinizi girin.
+                recoverable revenue detected. Enter your email for the PDF report.
               </p>
               <form onSubmit={handleLeadSubmit} className="stack-md">
                 <div className="form-group">
-                  <label className="form-label">E-Posta Adresiniz</label>
+                  <label className="form-label">Your Email Address</label>
                   <input type="email" value={leadEmail} onChange={(e) => setLeadEmail(e.target.value)}
                     placeholder="name@company.com" className="form-input" required />
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <Button type="button" variant="outline" className="flex-1" onClick={() => setShowLeadCapture(false)}>İptal</Button>
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => setShowLeadCapture(false)}>Cancel</Button>
                   <Button type="submit" variant="glow-orange" className="flex-1">
-                    <Download size={14} /> Raporu İndir
+                    <Download size={14} /> Download Report
                   </Button>
                 </div>
               </form>
@@ -409,33 +418,33 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             {userPlan === 'FREE' && (
               <button className="btn btn-glow-orange" style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem', fontWeight: 700 }}
                 onClick={() => setShowPricing(true)}>
-                🚀 Sınırsız Analiz İçin Yükselt
+                🚀 Upgrade for Unlimited Analysis
               </button>
             )}
             <button className="btn btn-outline" style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}
               onClick={onReset}>
-              Yeniden Tara
+              Rescan
             </button>
             <button
               className="btn btn-danger"
               style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}
               onClick={onDemoReset}
-              title="Tüm demo verisini sil ve sıfırla"
+              title="Delete all demo data and reset"
             >
-              Demo'yu Sıfırla
+              Reset Demo
             </button>
             <button className="btn btn-glow-blue" style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}
-              onClick={userPlan === 'FREE' ? () => alert('Gelişmiş Pipeline (Outcomes Center) sadece Pro planda kullanılabilir. Lütfen yükseltin.') : onNavigatePipeline}>
+              onClick={userPlan === 'FREE' ? () => setShowPricing(true) : onNavigatePipeline}>
               📊 Pipeline
             </button>
-            <Button variant="glow-blue" className="btn-icon" onClick={() => setShowSettings(true)} title="Ayarlar">
+            <Button variant="glow-blue" className="btn-icon" onClick={() => setShowSettings(true)} title="Settings">
               <Settings size={17} />
             </Button>
             <Button variant="glow-blue" onClick={handleExportPDF}
               style={{ padding: '0.5rem 1rem', minHeight: '40px', fontSize: '0.75rem' }}>
               <Download size={14} /> PDF
             </Button>
-            <Button variant="outline" className="btn-icon" onClick={onLogout} title="Çıkış">
+            <Button variant="outline" className="btn-icon" onClick={onLogout} title="Logout">
               <LogOut size={17} />
             </Button>
           </div>
@@ -446,7 +455,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
 
         {/* ── PAGE HEADER ── */}
         <div style={{ marginBottom: '2rem' }}>
-          <span className="badge badge-gray" style={{ marginBottom: '0.75rem' }}>Gelir Rehabilitasyon Operasyonu</span>
+          <span className="badge badge-gray" style={{ marginBottom: '0.75rem' }}>Revenue Rehabilitation Operation</span>
           <h1 style={{
             fontSize: 'clamp(1.375rem, 3vw, 1.875rem)',
             fontWeight: 800, letterSpacing: '-0.025em',
@@ -456,7 +465,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             RRIO <span style={{ color: 'var(--accent-primary)', textShadow: '0 0 20px var(--glow-primary)' }}>Recovery Intelligence</span> Operations
           </h1>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: '560px' }}>
-            Müşteri veritabanınızdaki sessiz gelir kayıpları ve kurtarma radarı.
+            Silent revenue leakage and recovery radar for your customer database.
           </p>
         </div>
 
@@ -472,15 +481,15 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
           }}>
             <div>
               <h3 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--neon-orange)', marginBottom: '0.375rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <AlertCircle size={18} /> Sadece İlk 50 Kayıt Analiz Edildi
+                <AlertCircle size={18} /> Only First 15 Records Analyzed
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-main)', margin: 0, opacity: 0.9 }}>
-                Ücretsiz planda olduğunuz için dosyanızın sadece ilk 50 satırı işlendi. Kalan kayıtlardaki riskleri görmek ve kurtarma operasyonunu yönetmek için planınızı yükseltin.
+                Since you are on the free plan, only the first 15 rows of your file were processed. Upgrade your plan to see risks in the remaining records and manage the recovery operation.
               </p>
             </div>
             <button className="btn btn-glow-orange" style={{ padding: '0.625rem 1.25rem', fontSize: '0.875rem', fontWeight: 700 }}
               onClick={() => setShowPricing(true)}>
-              Pro Plana Geç (<DollarSign size={14} style={{ marginLeft: -2 }}/>97/ay)
+              Upgrade to Pro (<DollarSign size={14} style={{ marginLeft: -2 }}/>49/mo)
             </button>
           </div>
         )}
@@ -491,13 +500,13 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             onClick={() => setActiveView('diagnose')}
             className={`tab-underline-btn ${activeView === 'diagnose' ? 'active' : ''}`}
           >
-            🔍 Zeka Teşhis Raporu
+            🔍 Intelligence Diagnostic Report
           </button>
           <button
             onClick={() => setActiveView('outcomes')}
             className={`tab-underline-btn ${activeView === 'outcomes' ? 'active' : ''}`}
           >
-            📈 Geri Kazanım & Sonuç Merkezi
+            📈 Recovery & Outcome Center
           </button>
         </div>
 
@@ -519,7 +528,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
               display: 'flex', flexDirection: 'column', justifyContent: 'center',
             }}>
               <div style={{ fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: '0.2rem' }}>
-                Toplam
+                Total
               </div>
               <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1 }}>
                 {records.length}
@@ -533,8 +542,8 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                   {[
                     { color: 'var(--status-warning)', label: 'Bekleyen', count: records.filter(r => r.status === 'PENDING').length },
-                    { color: 'var(--accent-primary)', label: 'İşlemde', count: records.filter(r => r.status === 'ACTION_TAKEN').length },
-                    { color: 'var(--status-success)', label: 'Kapatıldı', count: records.filter(r => r.status === 'CLOSED').length },
+                    { color: 'var(--accent-primary)', label: 'In Progress', count: records.filter(r => r.status === 'ACTION_TAKEN').length },
+                    { color: 'var(--status-success)', label: 'Closed', count: records.filter(r => r.status === 'CLOSED').length },
                   ].map(item => (
                     <span key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.7rem', color: 'var(--text-faint)' }}>
                       <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: item.color, display: 'inline-block', flexShrink: 0 }} />
@@ -546,7 +555,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                   fontSize: '0.68rem', fontWeight: 800, whiteSpace: 'nowrap',
                   color: records.filter(r => r.status === 'CLOSED').length > 0 ? 'var(--status-success)' : 'var(--text-faint)',
                 }}>
-                  %{Math.round((records.filter(r => r.status === 'CLOSED').length / records.length) * 100)} Tamamlandı
+                  %{Math.round((records.filter(r => r.status === 'CLOSED').length / records.length) * 100)} Completed
                 </span>
               </div>
 
@@ -588,17 +597,17 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             }}>
               <Cpu size={12} className="animate-pulse" /> RRS Operational Lifecycle
             </span>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-faint)' }}>Uçtan Uca Kurtarma Süreç Akışı</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-faint)' }}>End-to-End Recovery Process Flow</span>
           </div>
           <div className="lifecycle-grid">
             {[
-              { cls: 'ls-detect', num: '1', name: 'TESPİT', desc: 'Sızıntıyı Yakala' },
-              { cls: 'ls-classify', num: '2', name: 'SINIFLA', desc: 'Kategoriyi Belirle' },
-              { cls: 'ls-explain', num: '3', name: 'ANALİZ', desc: 'Nedeni İncele' },
-              { cls: 'ls-recommend', num: '4', name: 'STRATEJİ', desc: 'Yöntem Belirle' },
-              { cls: 'ls-action', num: '5', name: 'AKSİYON', desc: 'Teması Başlat' },
-              { cls: 'ls-track', num: '6', name: 'TAKİP', desc: 'Süreci İzle' },
-              { cls: 'ls-recovery', num: '7', name: 'KURTARMA', desc: 'Geliri Geri Al' },
+              { cls: 'ls-detect', num: '1', name: 'DETECT', desc: 'Catch Leakage' },
+              { cls: 'ls-classify', num: '2', name: 'CLASSIFY', desc: 'Categoryyi Belirle' },
+              { cls: 'ls-explain', num: '3', name: 'ANALYZE', desc: 'Examine Cause' },
+              { cls: 'ls-recommend', num: '4', name: 'STRATEGY', desc: 'Determine Method' },
+              { cls: 'ls-action', num: '5', name: 'ACTION', desc: 'Initiate Contact' },
+              { cls: 'ls-track', num: '6', name: 'TRACK', desc: 'Monitor Process' },
+              { cls: 'ls-recovery', num: '7', name: 'RECOVERY', desc: 'Recover Revenue' },
             ].map((s) => (
               <div key={s.num} className={`lifecycle-step ${s.cls}`}>
                 <span className="ls-step-num">{s.num}. {s.name}</span>
@@ -619,7 +628,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                   fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em',
                   textTransform: 'uppercase', color: 'var(--status-warning)', marginBottom: '0.875rem',
                 }}>
-                  <ShieldAlert size={14} /> Davranışsal Hatırlatıcı İstihbaratı
+                  <ShieldAlert size={14} /> Behavioral Reminder Intelligence
                 </h4>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.875rem' }}>
                   {reminders.map((alert, i) => (
@@ -639,7 +648,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                           background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: '0.25rem',
                         }}
                       >
-                        Kartı Göster <ArrowRight size={12} />
+                        Show Card <ArrowRight size={12} />
                       </button>
                     </div>
                   ))}
@@ -650,36 +659,36 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             {/* KPI Cards */}
             <div className="grid-3" style={{ marginBottom: '1.75rem' }}>
               <div className="kpi-card kpi-danger">
-                <span className="kpi-label">Toplam Sızıntı Tutarı</span>
+                <span className="kpi-label">Total Leakage Amount</span>
                 <div className="kpi-value kv-danger">
                   <DollarSign size={22} /> {totalLeakage.toLocaleString()}
                 </div>
-                <span className="kpi-note">Unutulmuş ve askıya alınmış fırsatların toplamı.</span>
+                <span className="kpi-note">Total of forgotten and suspended opportunities.</span>
               </div>
 
               <div className="kpi-card kpi-success">
-                <span className="kpi-label">Kurtarılabilir Gelir Potansiyeli</span>
+                <span className="kpi-label">Recoverable Gelir Potansiyeli</span>
                 <div className="kpi-value kv-success">
                   <DollarSign size={22} /> {recoverablePotential.toLocaleString()}
                 </div>
-                <span className="kpi-note">AI Geri Kazanım Kural Motoru başarı tahmini (%45).</span>
+                <span className="kpi-note">AI Recovery Rule Engine success estimate (45%).</span>
               </div>
 
               <div className="kpi-card kpi-primary">
-                <span className="kpi-label">Döngüsü Kurtarılan Ciro</span>
+                <span className="kpi-label">Cycle Recovered Revenue</span>
                 <div className="kpi-value kv-primary">
                   <DollarSign size={22} /> {recoveredRevenue.toLocaleString()}
                 </div>
-                <span className="kpi-note">Geri kazanılmış ve loop döngüsü kapatılmış ciro.</span>
+                <span className="kpi-note">Recovered and loop-closed revenue.</span>
               </div>
             </div>
 
             {/* Category Tabs */}
             <div className="tabs-scroll-container" style={{ marginBottom: '1.25rem' }}>
               {[
-                { key: 'ABANDONED_OPPORTUNITY', label: 'Terk Edilmiş Fırsatlar', icon: <Zap size={15} /> },
-                { key: 'SUBSCRIPTION_DECAY', label: 'Abonelik Çürümesi', icon: <Activity size={15} /> },
-                { key: 'COLD_RELATIONSHIP', label: 'Soğuyan İlişkiler', icon: <Users size={15} /> },
+                { key: 'ABANDONED_OPPORTUNITY', label: 'Abandoned Opportunitylar', icon: <Zap size={15} /> },
+                { key: 'SUBSCRIPTION_DECAY', label: 'Subscription Decay', icon: <Activity size={15} /> },
+                { key: 'COLD_RELATIONSHIP', label: 'Cooling Relationships', icon: <Users size={15} /> },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -702,10 +711,10 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                   className={isAutomationActive ? 'animate-pulse-slow' : ''} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.15rem' }}>
-                    Döngü Otomasyon Modu
+                    Loop Automation Mode
                   </div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                    Aksiyon mesajlarının arka planda otomatik zamanlanmasını simüle edin.
+                    Simulate automatic background scheduling of action messages.
                   </div>
                 </div>
               </div>
@@ -724,28 +733,28 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             {/* Filter & Sort */}
             <div className="filter-bar" style={{ marginBottom: '1.5rem' }}>
               <div className="filter-group">
-                <span className="filter-label">Durum</span>
+                <span className="filter-label">Status</span>
                 <select
                   className="filter-select"
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
                 >
-                  <option value="ALL">Tüm Fırsatlar</option>
-                  <option value="PENDING">Bekleyenler</option>
-                  <option value="ACTION_TAKEN">Takip Başlatılanlar</option>
-                  <option value="CLOSED">Kapatılanlar</option>
+                  <option value="ALL">All Opportunities</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="ACTION_TAKEN">Action Started</option>
+                  <option value="CLOSED">Closed</option>
                 </select>
               </div>
               <div className="filter-group">
-                <span className="filter-label">Sıralama</span>
+                <span className="filter-label">Sort By</span>
                 <select
                   className="filter-select"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                 >
-                  <option value="PRIORITY_DESC">Öncelik (Yüksek)</option>
-                  <option value="REVENUE_DESC">Risk Tutarı (Yüksek)</option>
-                  <option value="DATE_DESC">Son İşlem Tarihi</option>
+                  <option value="PRIORITY_DESC">Priority (High)</option>
+                  <option value="REVENUE_DESC">Risk Amount (High)</option>
+                  <option value="DATE_DESC">Last Action Date</option>
                 </select>
               </div>
             </div>
@@ -755,12 +764,12 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
               {filteredRecords.length === 0 && (
                 <div className="glass-panel empty-state" style={{ border: '1px dashed var(--border-hover)' }}>
                   <CheckCircle size={36} style={{ color: 'var(--border-hover)' }} />
-                  <p style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Tebrikler!</p>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Bu kategoride acil risk tespiti bulunamadı.</p>
+                  <p style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>Congratulations!</p>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>No urgent risk detected in this category.</p>
                 </div>
               )}
 
-              {filteredRecords.map(record => (
+              {filteredRecords.map((record, index) => (
                 <div key={record.id} id={`record-${record.id}`} className="record-card" style={{ scrollMarginTop: '80px' }}>
 
                   <div className="record-content">
@@ -776,14 +785,14 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                         fontSize: '0.8125rem', color: 'var(--text-muted)', marginBottom: '1.375rem',
                       }}>
                         <Users size={13} style={{ flexShrink: 0 }} />
-                        Yetkili: <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{record.contactPerson}</span>
+                        Contact: <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{record.contactPerson}</span>
                       </p>
 
                       {/* Stats mini-grid */}
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.75rem', marginBottom: '1.5rem' }}>
                         <div className="premium-panel">
                           <span style={{ display: 'block', fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: '0.3rem' }}>
-                            Proje / Kapsam
+                            Project / Scope
                           </span>
                           <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1.3 }}>
                             {record.context}
@@ -812,7 +821,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                           textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: '1rem',
                         }}>
                           <Activity size={13} style={{ color: 'var(--accent-primary)' }} />
-                          Olay Güdümlü Zaman Tüneli
+                          Event-Driven Timeline
                         </h4>
                         <div className="timeline">
                           {record.eventHistory?.map((ev, i) => {
@@ -853,10 +862,10 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                             fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
                             textTransform: 'uppercase', color: 'var(--text-faint)',
                           }}>
-                            <ShieldAlert size={13} style={{ color: 'var(--accent-primary)' }} /> İstihbarat Teşhisi
+                            <ShieldAlert size={13} style={{ color: 'var(--accent-primary)' }} /> Intelligence Diagnosis
                           </h4>
                           <span className={`conf-badge ${(record.confidenceScore || 90) >= 90 ? 'conf-high' : (record.confidenceScore || 90) >= 75 ? 'conf-med' : 'conf-low'}`}>
-                            {(record.confidenceScore || 90) >= 90 ? 'Yüksek Güvenilirlik' : (record.confidenceScore || 90) >= 75 ? 'Orta Güvenilirlik' : 'Düşük Güvenilirlik'}
+                            {(record.confidenceScore || 90) >= 90 ? 'High Confidence' : (record.confidenceScore || 90) >= 75 ? 'Medium Confidence' : 'Low Confidence'}
                           </span>
                         </div>
                         <p style={{ fontSize: '0.875rem', color: 'var(--text-main)', lineHeight: 1.65, marginBottom: '1.25rem', opacity: 0.9 }}>
@@ -868,7 +877,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                           fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
                           textTransform: 'uppercase', color: 'var(--text-faint)', marginBottom: '0.5rem',
                         }}>
-                          <Target size={13} style={{ color: 'var(--accent-primary)' }} /> Önerilen Strateji
+                          <Target size={13} style={{ color: 'var(--accent-primary)' }} /> Recommended Strategy
                         </h4>
                         <p style={{ fontSize: '0.875rem', color: 'var(--text-main)', lineHeight: 1.65, marginBottom: '1.25rem', opacity: 0.9 }}>
                           {record.strategy}
@@ -884,7 +893,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                             fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
                             textTransform: 'uppercase', color: 'var(--text-faint)',
                           }}>
-                            <MessageSquare size={13} style={{ color: 'var(--accent-primary)' }} /> Kurtarma Şablonu
+                            <MessageSquare size={13} style={{ color: 'var(--accent-primary)' }} /> Recovery Template
                           </h4>
                           <div className="tone-switcher">
                             <button
@@ -904,10 +913,46 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                           </div>
                         </div>
 
-                        <div className="draft-block" style={{ marginBottom: '1.5rem' }}>
-                          "{draftTones[record.id] === 'friendly'
-                            ? record.draftMessage.replace('Ahmet Bey merhaba', 'Ahmet Bey selamlar').replace('Selin Hanım', 'Selin selam').replace('kontrol etmek istedim', 'bir yazayım istedim').replace('bekleriz', 'bekliyorum, sevgiler')
-                            : record.draftMessage}"
+                        <div style={{ position: 'relative' }}>
+                          <div
+                            className="draft-block"
+                            style={{
+                              marginBottom: '1.5rem',
+                              filter: (userPlan === 'FREE' && index >= 5) ? 'blur(5px)' : 'none',
+                              userSelect: (userPlan === 'FREE' && index >= 5) ? 'none' : 'auto',
+                              pointerEvents: (userPlan === 'FREE' && index >= 5) ? 'none' : 'auto',
+                            }}
+                          >
+                            "{draftTones[record.id] === 'friendly'
+                              ? record.draftMessage.replace('Hi John', 'Hey John').replace('Jane', 'Hey Jane').replace('just checking in', 'wanted to drop a quick line').replace('hope to hear from you', 'looking forward, cheers')
+                              : record.draftMessage}"
+                          </div>
+                          {userPlan === 'FREE' && index >= 5 && (
+                            <div
+                              onClick={() => setShowPricing(true)}
+                              style={{
+                                position: 'absolute',
+                                top: 0, left: 0, right: 0, bottom: 0,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: 'rgba(5,5,8,0.5)',
+                                backdropFilter: 'blur(1px)',
+                                borderRadius: 'var(--r-xs)',
+                                cursor: 'pointer',
+                                color: 'var(--neon-orange)',
+                                fontSize: '0.72rem',
+                                fontWeight: 800,
+                                gap: '0.25rem',
+                                zIndex: 10,
+                                border: '1px solid rgba(255,126,71,0.2)',
+                              }}
+                            >
+                              <Lock size={14} />
+                              <span>Show Template with Pro Plan</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -917,7 +962,20 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                         {/* PENDING */}
                         {record.status === 'PENDING' && (
                           <>
-                            {isAutomationActive ? (
+                            {userPlan === 'FREE' && index >= 5 ? (
+                              <div className="stack-xs">
+                                <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-faint)', marginBottom: '0.25rem' }}>
+                                  Start Action
+                                </div>
+                                <Button
+                                  variant="glow-orange"
+                                  onClick={() => setShowPricing(true)}
+                                  style={{ width: '100%', minHeight: '44px', fontSize: '0.78rem', fontWeight: 700 }}
+                                >
+                                  <Lock size={13} style={{ marginRight: '0.375rem' }} /> Pro Plan ile Aksiyon Al
+                                </Button>
+                              </div>
+                            ) : isAutomationActive ? (
                               <div className="auto-active-banner">
                                 <Zap size={18} style={{ color: 'var(--neon-orange)', flexShrink: 0 }} className="animate-pulse-slow" />
                                 <div>
@@ -925,14 +983,14 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                                     Otomatik Kurtarma Sırasında
                                   </span>
                                   <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
-                                    Sistem 2 saat içinde otomatik şablonu tetikleyecektir.
+                                    The system will automatically trigger the template within 2 hours.
                                   </span>
                                 </div>
                               </div>
                             ) : activeAction?.id !== record.id ? (
                               <div className="stack-xs">
                                 <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-faint)', marginBottom: '0.25rem' }}>
-                                  Aksiyon Başlat
+                                  Start Action
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                                   <Button variant="glow-blue" onClick={() => startAction(record, 'email')}
@@ -963,11 +1021,11 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                                     letterSpacing: '0.1em', color: 'var(--accent-primary)',
                                   }}>
                                     {activeAction.type === 'email' ? <Mail size={12} /> : <MessageSquare size={12} />}
-                                    {activeAction.type === 'email' ? 'E-POSTA ASİSTANI' : 'WHATSAPP ASİSTANI'}
+                                    {activeAction.type === 'email' ? 'EMAIL ASSISTANT' : 'WHATSAPP ASSISTANT'}
                                   </span>
                                   <button onClick={() => setActiveAction(null)}
                                     style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}>
-                                    İptal
+                                    Cancel
                                   </button>
                                 </div>
 
@@ -994,7 +1052,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                                   )}
 
                                   <div className="form-group">
-                                    <label className="form-label">Mesaj Taslağı</label>
+                                    <label className="form-label">Message Draft</label>
                                     <textarea value={editedBody} onChange={(e) => setEditedBody(e.target.value)}
                                       rows={5} className="form-textarea" style={{ minHeight: '100px', fontSize: '0.75rem', padding: '0.625rem 0.875rem' }} />
                                   </div>
@@ -1025,7 +1083,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                             </div>
 
                             <div>
-                              <label className="form-label" style={{ marginBottom: '0.5rem' }}>Döngüyü Kapatmak İçin Sonuç Seçin:</label>
+                              <label className="form-label" style={{ marginBottom: '0.5rem' }}>Select Outcome to Close Cycle:</label>
                               <div className="outcome-row">
                                 <select
                                   className="filter-select"
@@ -1033,12 +1091,12 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                                   value={selectedOutcome[record.id] || ''}
                                   onChange={(e) => setSelectedOutcome({ ...selectedOutcome, [record.id]: e.target.value as OutcomeType })}
                                 >
-                                  <option value="" disabled>Sonucu seçin...</option>
-                                  <option value="recovered">✅ Kurtarıldı (Gelir Geri Kazanıldı)</option>
-                                  <option value="replied">💬 Yanıt Alındı (İletişim Aktif)</option>
-                                  <option value="reopened">🔄 Yeniden Açıldı</option>
-                                  <option value="no_response">⏳ Cevap Yok</option>
-                                  <option value="churned">❌ Kayıp / Churn</option>
+                                  <option value="" disabled>Select outcome...</option>
+                                  <option value="recovered">✅ Recovered (Gelir Geri Kazanıldı)</option>
+                                  <option value="replied">💬 Replied (Communication Active)</option>
+                                  <option value="reopened">🔄 Reopened</option>
+                                  <option value="no_response">⏳ No Response</option>
+                                  <option value="churned">❌ Churned</option>
                                 </select>
                                 <Button variant="glow-green" disabled={!selectedOutcome[record.id]}
                                   onClick={() => handleCloseLoop(record.id)}
@@ -1055,7 +1113,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                           <div className="closed-panel">
                             <div>
                               <span style={{ display: 'block', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-faint)', marginBottom: '0.375rem' }}>
-                                Döngü Sonucu
+                                Cycle Outcome
                               </span>
                               <span className={`badge ${getOutcomeBadgeClass(record.outcome)}`} style={{ fontSize: '0.7rem' }}>
                                 {getOutcomeIcon(record.outcome)} {getOutcomeLabel(record.outcome)}
@@ -1063,7 +1121,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                             </div>
                             <div style={{ textAlign: 'right' }}>
                               <span style={{ display: 'block', fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-faint)', marginBottom: '0.375rem' }}>
-                                Gerçekleşen Aksiyon
+                                Realized Action
                               </span>
                               <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', justifyContent: 'flex-end' }}>
                                 <CheckCircle size={13} /> {record.actionType}
@@ -1083,7 +1141,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
               <div className="section-title-row">
                 <span className="section-title-text">
                   <Activity size={18} style={{ color: 'var(--accent-primary)' }} />
-                  Global İstihbarat Kaydı
+                  Global Intelligence Record
                 </span>
               </div>
               <div className="glass-panel">
@@ -1091,15 +1149,15 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Müşteri / Proje</th>
-                        <th>Kategori</th>
+                        <th>Client / Project</th>
+                        <th>Category</th>
                         <th>Risk Tutarı</th>
-                        <th style={{ textAlign: 'right' }}>Durum</th>
+                        <th style={{ textAlign: 'right' }}>Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {records.length === 0 ? (
-                        <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2.5rem' }}>Henüz analiz edilmiş veri bulunmamaktadır.</td></tr>
+                        <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2.5rem' }}>There is no analyzed data yet.</td></tr>
                       ) : records.map((r) => (
                         <tr key={r.id}>
                           <td>
@@ -1111,7 +1169,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                               {r.category === 'ABANDONED_OPPORTUNITY' && <Zap size={12} style={{ color: 'var(--accent-primary)' }} />}
                               {r.category === 'SUBSCRIPTION_DECAY' && <Activity size={12} style={{ color: 'var(--accent-primary)' }} />}
                               {r.category === 'COLD_RELATIONSHIP' && <Users size={12} style={{ color: 'var(--accent-primary)' }} />}
-                              {r.category === 'ABANDONED_OPPORTUNITY' ? 'Terk Edilmiş Fırsat' : r.category === 'SUBSCRIPTION_DECAY' ? 'Abonelik Çürümesi' : 'Soğuk İlişki'}
+                              {r.category === 'ABANDONED_OPPORTUNITY' ? 'Abandoned Opportunity' : r.category === 'SUBSCRIPTION_DECAY' ? 'Subscription Decay' : 'Cold Relationship'}
                             </span>
                           </td>
                           <td>
@@ -1123,8 +1181,8 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                             </span>
                           </td>
                           <td style={{ textAlign: 'right' }}>
-                            {r.status === 'PENDING' && <span className="badge badge-gray"><Clock size={11} /> Bekliyor</span>}
-                            {r.status === 'ACTION_TAKEN' && <span className="badge badge-info"><CheckCircle size={11} /> İşlemde</span>}
+                            {r.status === 'PENDING' && <span className="badge badge-gray"><Clock size={11} /> Pending</span>}
+                            {r.status === 'ACTION_TAKEN' && <span className="badge badge-info"><CheckCircle size={11} /> In Progress</span>}
                             {r.status === 'CLOSED' && <span className={`badge ${getOutcomeBadgeClass(r.outcome)}`}>{getOutcomeIcon(r.outcome)} {getOutcomeLabel(r.outcome)}</span>}
                           </td>
                         </tr>
@@ -1149,14 +1207,14 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                 <Target size={32} />
               </div>
               <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1rem' }}>
-                Gelişmiş Kurtarma ve Sonuç Merkezi
+                Advanced Recovery and Outcome Center
               </h2>
               <p style={{ fontSize: '1rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2rem' }}>
-                Ücretsiz planda sadece teşhis yapabilirsiniz. "Geri Kazanım & Sonuç Merkezi" (Outcomes Center); kurtarılan ciroları, before/after dönüşümlerini ve operasyonel başarı oranlarını takip etmek içindir ve sadece <b>Pro</b> planda mevcuttur.
+                You can only diagnose in the free plan. "Recovery & Outcome Center"; is for tracking recovered revenues, before/after conversions, and operational success rates, and is only available in the <b>Pro</b> plan.
               </p>
               <button className="btn btn-glow-orange" style={{ padding: '0.875rem 2rem', fontSize: '1rem', fontWeight: 700 }}
                 onClick={() => setShowPricing(true)}>
-                Pro Plana Geç (<DollarSign size={16} style={{ marginLeft: -2 }}/>97/ay)
+                Upgrade to Pro (<DollarSign size={16} style={{ marginLeft: -2 }}/>49/mo)
               </button>
             </div>
           </div>
@@ -1167,37 +1225,37 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             {/* Exec summary cards */}
             <div className="grid-4">
               <div className="kpi-card kpi-success">
-                <span className="kpi-label">Kurtarılan Ciro</span>
+                <span className="kpi-label">Recovered Revenue</span>
                 <div className="kpi-value kv-success"><DollarSign size={20} /> {recoveredRevenue.toLocaleString()}</div>
-                <span className="kpi-note">Tahsil edilmiş kesin gelir.</span>
+                <span className="kpi-note">Collected definite revenue.</span>
               </div>
               <div className="kpi-card kpi-primary">
                 <span className="kpi-label">Korunan Ciro</span>
                 <div className="kpi-value kv-primary"><DollarSign size={20} /> {preservedRevenue.toLocaleString()}</div>
-                <span className="kpi-note">İlişkisi tazelenmiş değer.</span>
+                <span className="kpi-note">Value of refreshed relationship.</span>
               </div>
               <div className="kpi-card kpi-danger">
                 <span className="kpi-label">Kaybedilen / Churn</span>
                 <div className="kpi-value kv-danger"><DollarSign size={20} /> {churnedRevenue.toLocaleString()}</div>
-                <span className="kpi-note">Ulaşılamayan bütçe tutarı.</span>
+                <span className="kpi-note">Unreachable budget amount.</span>
               </div>
               <div className="kpi-card kpi-warning">
-                <span className="kpi-label">Başarı Oranı</span>
+                <span className="kpi-label">Success Rate</span>
                 <div className="kpi-value kv-warning">%{successRate}</div>
-                <span className="kpi-note">Kapatılmış döngü başarısı.</span>
+                <span className="kpi-note">Closed cycle success.</span>
               </div>
             </div>
 
             {/* Before/After transition panels */}
             <div>
               <div className="section-title-row">
-                <span className="section-title-text"><Zap size={18} style={{ color: 'var(--accent-primary)' }} /> Dönüşüm Analizi</span>
+                <span className="section-title-text"><Zap size={18} style={{ color: 'var(--accent-primary)' }} /> Conversion Analysis</span>
               </div>
               <div className="grid-3">
                 {[
-                  { icon: <Zap size={18} style={{ color: 'var(--accent-primary)' }} />, title: 'Terk Edilmiş Fırsat → Kurtarma', before: 'Teklif İlgisiz & Unutulmuş', after: 'Takip Başlatıldı & Gelir Kurtarıldı', count: records.filter(r => r.category === 'ABANDONED_OPPORTUNITY' && r.status === 'CLOSED' && r.outcome === 'recovered').length },
-                  { icon: <Activity size={18} style={{ color: 'var(--accent-primary)' }} />, title: 'Abonelik Çürümesi → Stabilize', before: 'Login Oranı Düşük (%40 Churn Riski)', after: 'Temas Kuruldu & İlişki Tazelendi', count: records.filter(r => r.category === 'SUBSCRIPTION_DECAY' && r.status === 'CLOSED' && (r.outcome === 'replied' || r.outcome === 'reopened')).length },
-                  { icon: <Users size={18} style={{ color: 'var(--accent-primary)' }} />, title: 'Soğuk İlişki → Yeniden Aktif', before: '6+ Aydır Sıfır Temas & Unutulmuş', after: 'Kahve Sohbeti & Yeni Proje Fırsatı', count: records.filter(r => r.category === 'COLD_RELATIONSHIP' && r.status === 'CLOSED' && r.outcome !== 'churned').length },
+                  { icon: <Zap size={18} style={{ color: 'var(--accent-primary)' }} />, title: 'Abandoned Opportunity → Recovery', before: 'Proposal Ignored & Forgotten', after: 'Follow-up Started & Revenue Recovered', count: records.filter(r => r.category === 'ABANDONED_OPPORTUNITY' && r.status === 'CLOSED' && r.outcome === 'recovered').length },
+                  { icon: <Activity size={18} style={{ color: 'var(--accent-primary)' }} />, title: 'Subscription Decay → Stabilize', before: 'Login Rate Low (40% Churn Risk)', after: 'Contact Established & Relationship Refreshed', count: records.filter(r => r.category === 'SUBSCRIPTION_DECAY' && r.status === 'CLOSED' && (r.outcome === 'replied' || r.outcome === 'reopened')).length },
+                  { icon: <Users size={18} style={{ color: 'var(--accent-primary)' }} />, title: 'Cold Relationship → Reactivated', before: 'Zero Contact for 6+ Months & Forgotten', after: 'Coffee Chat & New Project Opportunity', count: records.filter(r => r.category === 'COLD_RELATIONSHIP' && r.status === 'CLOSED' && r.outcome !== 'churned').length },
                 ].map((panel, i) => (
                   <div key={i} className="glass-panel" style={{ padding: '1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1.25rem' }}>
@@ -1206,7 +1264,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                     </div>
                     <div className="stack-sm">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.35)', padding: '0.625rem 0.875rem', borderRadius: 'var(--r-xs)', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Öncesi:</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Before:</span>
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--status-danger)' }}>{panel.before}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.35)', padding: '0.625rem 0.875rem', borderRadius: 'var(--r-xs)', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -1214,7 +1272,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--status-success)' }}>{panel.after}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.625rem', borderTop: '1px solid var(--border)' }}>
-                        <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-faint)' }}>Sonuçlanan:</span>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-faint)' }}>Resulting:</span>
                         <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)' }}>{panel.count} Firma</span>
                       </div>
                     </div>
@@ -1226,22 +1284,22 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             {/* Closed loop records table */}
             <div>
               <div className="section-title-row">
-                <span className="section-title-text"><CheckCircle size={18} style={{ color: 'var(--status-success)' }} /> Kapatılmış Kurtarma Döngüleri</span>
+                <span className="section-title-text"><CheckCircle size={18} style={{ color: 'var(--status-success)' }} /> Closed Recovery Cycles</span>
               </div>
               <div className="glass-panel">
                 <div style={{ overflowX: 'auto' }}>
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Müşteri / Proje</th>
-                        <th>Kategori</th>
-                        <th>İyileşen Gelir</th>
-                        <th style={{ textAlign: 'right' }}>Kapatılma Durumu</th>
+                        <th>Client / Project</th>
+                        <th>Category</th>
+                        <th>Recovered Revenue</th>
+                        <th style={{ textAlign: 'right' }}>Kapatılma Statusu</th>
                       </tr>
                     </thead>
                     <tbody>
                       {records.filter(r => r.status === 'CLOSED').length === 0 ? (
-                        <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2.5rem' }}>Henüz hiçbir kurtarma döngüsü sonuçlandırılmadı.</td></tr>
+                        <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2.5rem' }}>No recovery cycles have been concluded yet.</td></tr>
                       ) : records.filter(r => r.status === 'CLOSED').map(r => (
                         <tr key={r.id}>
                           <td>
@@ -1249,7 +1307,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{r.context}</div>
                           </td>
                           <td style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-                            {r.category === 'ABANDONED_OPPORTUNITY' ? 'Terk Edilmiş Fırsat' : r.category === 'SUBSCRIPTION_DECAY' ? 'Abonelik Çürümesi' : 'Soğuk İlişki'}
+                            {r.category === 'ABANDONED_OPPORTUNITY' ? 'Abandoned Opportunity' : r.category === 'SUBSCRIPTION_DECAY' ? 'Subscription Decay' : 'Cold Relationship'}
                           </td>
                           <td style={{ fontWeight: 700, color: 'var(--text-main)' }}>${r.revenueImpact.toLocaleString()}</td>
                           <td style={{ textAlign: 'right' }}>
@@ -1275,7 +1333,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             {leadCaptures.length > 0 && (
               <Button variant="outline" onClick={handleExportLeads}
                 style={{ fontSize: '0.75rem', padding: '0.5rem 1rem', minHeight: '38px' }}>
-                <Download size={14} /> CSV Dışa Aktar
+                <Download size={14} /> Export CSV
               </Button>
             )}
           </div>
@@ -1283,7 +1341,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             {leadCaptures.length === 0 ? (
               <div className="empty-state" style={{ padding: '2.5rem' }}>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                  Henüz toplanmış lead kaydı bulunmamaktadır.
+                  There are no captured lead records yet.
                 </p>
               </div>
             ) : (
@@ -1292,9 +1350,9 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                   <thead>
                     <tr>
                       <th>E-Posta Adresi</th>
-                      <th>Teşhis Tarihi</th>
+                      <th>Diagnosis Date</th>
                       <th>Firma Sayısı</th>
-                      <th style={{ textAlign: 'right' }}>Kurtarılabilir Kayıp</th>
+                      <th style={{ textAlign: 'right' }}>Recoverable Kayıp</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1334,7 +1392,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
             {feedbackResponses.length === 0 ? (
               <div className="empty-state" style={{ padding: '2.5rem' }}>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                  Henüz toplanmış geri bildirim bulunmamaktadır.
+                  There is no feedback collected yet.
                 </p>
               </div>
             ) : (
@@ -1343,10 +1401,10 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                   <thead>
                     <tr>
                       <th>E-Posta Adresi</th>
-                      <th>Tarih</th>
+                      <th>Date</th>
                       <th>Fayda Seviyesi</th>
-                      <th>En Değerli Kısım</th>
-                      <th>Görüş / Öneri</th>
+                      <th>Most Valuable Part</th>
+                      <th>Feedback / Suggestion</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1355,7 +1413,7 @@ export function DiagnosisView({ onReset, userEmail, onLogout, onNavigatePipeline
                         <td style={{ fontWeight: 600, color: 'var(--text-main)' }}>{fb.email}</td>
                         <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{fb.timestamp}</td>
                         <td>
-                          <span className={`badge ${fb.wasUseful === 'Çok Faydalı' ? 'badge-success' : fb.wasUseful === 'Biraz Faydalı' ? 'badge-warning' : 'badge-danger'}`} style={{ fontSize: '0.7rem' }}>
+                          <span className={`badge ${fb.wasUseful === 'Very Useful' ? 'badge-success' : fb.wasUseful === 'Somewhat Useful' ? 'badge-warning' : 'badge-danger'}`} style={{ fontSize: '0.7rem' }}>
                             {fb.wasUseful}
                           </span>
                         </td>

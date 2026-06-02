@@ -23,7 +23,7 @@
   /* Pastel Neon Palette */
   --accent-primary: #0dd3ff;    /* Cyan — Primary / Brand */
   --status-success: #38f296;    /* Green — Won / Approved / Recovered */
-  --status-danger: #ff5277;     /* Red — Risk / Loss / Kaçak */
+  --status-danger: #ff5277;     /* Red — Risk / Loss / Leak */
   --status-warning: #ffd043;    /* Yellow — Reminder / Tracking */
   --status-info: #a78bfa;       /* Violet — Info / General */
   --neon-orange: #ff7e47;       /* Orange — Follow-up / Action */
@@ -71,8 +71,19 @@ select option { background: var(--surface-2); }
    ======================================== */
 html {
   font-size: 16px;
-  overflow-y: scroll;          /* scrollbar alanı her sayfada rezerve → geçişte zıplama yok */
+  overflow-y: scroll;          /* scrollbar space reserved on every page → no jumping on transition */
   scrollbar-gutter: stable;    /* scrollbar olmasa bile yer kaplar */
+}
+
+/* ── Global Scrollbar — Dark Theme ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(13,211,255,0.15);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(13,211,255,0.3);
 }
 
 body {

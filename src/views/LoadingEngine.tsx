@@ -7,25 +7,25 @@ interface LoadingEngineProps {
 
 const STEPS = [
   {
-    label: 'E-Posta logları & Workspace veri akışları taranıyor...',
+    label: 'Scanning Email logs & Workspace data streams...',
     color: 'var(--accent-primary)',
     rgbValues: '13,211,255',
     icon: <Search size={18} style={{ color: 'var(--accent-primary)' }} />,
   },
   {
-    label: "Olay güdümlü 'customer_inactive' & 'churn' riskleri tespit ediliyor...",
+    label: "Detecting event-driven 'customer_inactive' & 'churn' risks...",
     color: 'var(--neon-orange)',
     rgbValues: '255,126,71',
     icon: <Activity size={18} style={{ color: 'var(--neon-orange)' }} />,
   },
   {
-    label: "'proposal_followup_missed' (Unutulmuş Takip) açıkları analiz ediliyor...",
+    label: "Analyzing 'proposal_followup_missed' vulnerabilities...",
     color: 'var(--status-danger)',
     rgbValues: '255,82,119',
     icon: <ShieldAlert size={18} style={{ color: 'var(--status-danger)' }} />,
   },
   {
-    label: 'Öncelik Puanları ve kurtarılabilir ciro hesaplanıyor...',
+    label: 'Calculating priority scores and recoverable revenue...',
     color: 'var(--status-success)',
     rgbValues: '56,242,150',
     icon: <Cpu size={18} style={{ color: 'var(--status-success)' }} />,
@@ -33,12 +33,12 @@ const STEPS = [
 ];
 
 const MATRIX_LINES = [
-  "[TARAMA] Ahmet Yılmaz (TechCorp) 'proposal_viewed' logu eşleştirildi...",
-  "[KURAL MOTORU] 'customer_inactive' tetiklendi: Selin Kaya > 30 gün...",
-  "[SENSÖR] Caner Öz (Nexus) son temas: 7 ay — Risk Skoru: %85...",
-  "[ANALİZ] Teklif etkileşim: 3 kez görüntülendi, yanıt yok...",
-  "[GÜVENLİK] Uçtan Uca Şifreli Local Sandbox izole edildi...",
-  "[İSTİHBARAT] ROI & ciro kayıp matrisi önceliklendiriliyor...",
+  "[SCAN] John Doe (TechCorp) 'proposal_viewed' log matched...",
+  "[RULE ENGINE] 'customer_inactive' triggered: Jane Doe > 30 days...",
+  "[SENSOR] Alex Smith (Nexus) last contact: 7 months — Risk Score: 85%...",
+  "[ANALYSIS] Proposal interaction: viewed 3 times, no response...",
+  "[SECURITY] End-to-End Encrypted Local Sandbox isolated...",
+  "[INTELLIGENCE] ROI & revenue loss matrix being prioritized...",
 ];
 
 export function LoadingEngine({ onComplete }: LoadingEngineProps) {
@@ -77,11 +77,11 @@ export function LoadingEngine({ onComplete }: LoadingEngineProps) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '2rem',
-      paddingTop: '80px',   /* ghost topbar yüksekliği + nefes payı */
+      paddingTop: '80px',   /* ghost topbar height + breathing room */
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Ghost topbar — sayfa geçişi tutarlılığı için (Logo + Brand) */}
+      {/* Ghost topbar — for page transition consistency (Logo + Brand) */}
       <header style={{
         position: 'fixed',
         top: 0, left: 0, right: 0,
@@ -176,7 +176,7 @@ export function LoadingEngine({ onComplete }: LoadingEngineProps) {
           color: 'var(--text-main)',
           marginBottom: '0.5rem',
         }}>
-          Zeka Teşhis Motoru Aktif
+          Intelligence Diagnostic Engine Active
         </h2>
 
         {/* ── Matrix ticker ── */}
@@ -269,7 +269,7 @@ export function LoadingEngine({ onComplete }: LoadingEngineProps) {
               fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.1em',
               textTransform: 'uppercase', color: 'var(--text-faint)',
             }}>
-              Analiz İlerlemesi
+              Analysis Progress
             </span>
             <span style={{
               fontSize: '0.7rem', fontWeight: 700,
@@ -295,7 +295,7 @@ export function LoadingEngine({ onComplete }: LoadingEngineProps) {
           textAlign: 'center', fontSize: '0.68rem', color: 'var(--text-faint)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
         }}>
-          🔒 Tüm veriler yerel sandbox ortamında işlenmektedir.
+          🔒 All data is processed in a local sandbox environment.
         </p>
       </div>
     </div>

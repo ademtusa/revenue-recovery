@@ -1,4 +1,6 @@
-import { v4 as uuidv4 } from 'uuid';
+const fs = require('fs');
+
+const code = `import { v4 as uuidv4 } from 'uuid';
 import { db } from './firebase';
 import { collection, doc, setDoc, getDocs, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 
@@ -186,6 +188,7 @@ export const setUserPlan = (plan: PlanType) => {
 };
 
 export const addRecordsFromCSV = async (parsedData: RawCSVRow[]): Promise<{ recordsSaved: number; limitHit: boolean }> => {
+  const current = await getRecords();
   const userPlan = getUserPlan();
   
   let dataToProcess = parsedData.filter(row => row.Company && row.Revenue);
@@ -219,7 +222,7 @@ export const addRecordsFromCSV = async (parsedData: RawCSVRow[]): Promise<{ reco
         urgency = 'LOW';
         subCause = 'No dialogue established for a long time since the last successful project. Risk of being forgotten and shifting to competitor.';
         strategy = 'Relationship-focused, non-salesy sincere trust renewal.';
-        draftMessage = `${row.Contact || 'Hello'}, long time no see. I wondered how Your last project's how it went. Hope everything is going great, let's grab coffee.`;
+        draftMessage = \`\${row.Contact || 'Hello'}, long time no see. I wondered how Your last project's how it went. Hope everything is going great, let's grab coffee.\`;
         
         eventHistory.push(
           { date: '10 Months Ago', type: 'lead_created', title: 'First Customer Definition', description: 'Customer record created in the database.' },
@@ -232,13 +235,13 @@ export const addRecordsFromCSV = async (parsedData: RawCSVRow[]): Promise<{ reco
         urgency = 'CRITICAL';
         subCause = 'High-revenue proposal presented but left pending because follow-up call was missed.';
         strategy = 'Time-sensitive follow-up call. Clear proposal to resolve decision obstacle.';
-        draftMessage = `${row.Contact || 'Hello'}, I wanted to check if priorities have changed regarding our project. If you have any questions about proposal or budget details, we can quickly clarify them.`;
+        draftMessage = \`\${row.Contact || 'Hello'}, I wanted to check if priorities have changed regarding our project. If you have any questions about proposal or budget details, we can quickly clarify them.\`;
         
         eventHistory.push(
           { date: '25 Days Ago', type: 'lead_created', title: 'Request Received', description: 'Proposal request from web form recorded.' },
           { date: '20 Days Ago', type: 'lead_qualified', title: 'Lead Qualified', description: 'Requirement analysis completed and budget approved.' },
           { date: '15 Days Ago', type: 'proposal_sent', title: 'Proposal Forwarded', description: 'Official proposal document shared.' },
-          { date: '12 Days Ago', type: 'proposal_viewed', title: 'Customer Reviewed', description: 'Customer viewed the proposal file but didn\'t respond.' },
+          { date: '12 Days Ago', type: 'proposal_viewed', title: 'Customer Reviewed', description: 'Customer viewed the proposal file but didn\\'t respond.' },
           { date: '5 Days Ago', type: 'proposal_followup_missed', title: 'Follow-up Call Forgotten', description: 'Proposal follow-up call delayed in calendar (Revenue Leak!).' },
           { date: 'Today', type: 'recovery_triggered', title: 'Follow-up Recovery Triggered', description: 'Recovery engine suggested urgent AI follow-up.' }
         );
@@ -247,7 +250,7 @@ export const addRecordsFromCSV = async (parsedData: RawCSVRow[]): Promise<{ reco
         urgency = 'MEDIUM';
         subCause = 'Decay detected in platform usage frequency or subscription engagement in the last 30 days.';
         strategy = 'Benefit-reminding gentle contact. Extra support offer.';
-        draftMessage = `${row.Contact || 'Hello'}, we noticed when reviewing your system data that you haven\'t used some of your membership benefits yet. Shall we set up a short meeting this week?`;
+        draftMessage = \`\${row.Contact || 'Hello'}, we noticed when reviewing your system data that you haven\\'t used some of your membership benefits yet. Shall we set up a short meeting this week?\`;
         
         eventHistory.push(
           { date: '60 Days Ago', type: 'lead_created', title: 'Service Started', description: 'Subscription package activated without issues.' },
@@ -301,7 +304,7 @@ export const updateRecord = async (id: string, updates: Partial<IntelligenceReco
           date: 'Today',
           type: 'recovery_action_taken',
           title: 'Recovery Started',
-          description: `AI Message Template sent via ${updates.actionType} channel.`
+          description: \`AI Message Template sent via \${updates.actionType} channel.\`
         }
       ];
     }
@@ -338,7 +341,7 @@ export const updateRecord = async (id: string, updates: Partial<IntelligenceReco
           date: 'Today',
           type: eventType,
           title: eventTitle,
-          description: `Loop Concluded. Result: ${outcomeLabel}`
+          description: \`Loop Concluded. Result: \${outcomeLabel}\`
         }
       ];
     }
@@ -395,18 +398,6 @@ export const saveLeadCapture = async (email: string, estimatedLoss: number, comp
   }
 };
 
-export const clearLeadCaptures = async (): Promise<void> => {
-  try {
-    const leads = await getLeadCaptures();
-    for (const l of leads) {
-      if (l.id) await deleteDoc(doc(db, "leads", l.id));
-    }
-  } catch (e) {
-    console.error("Error clearing leads: ", e);
-    localStorage.removeItem('rrio_lead_captures');
-  }
-};
-
 export const saveFeedback = async (feedbackData: any) => {
   const fb = {
     ...feedbackData,
@@ -451,3 +442,7 @@ export const clearFeedbacks = async (): Promise<void> => {
     localStorage.removeItem('rrio_feedback_responses');
   }
 };
+`;
+
+fs.writeFileSync('C:/Users/LENOVADEM/Documents/Antigravinity/Creaizen/revenue-recovery/src/lib/db.ts', code, 'utf8');
+console.log('db.ts updated successfully.');

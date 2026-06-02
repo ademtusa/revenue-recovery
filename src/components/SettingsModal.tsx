@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
-import { X, AlertTriangle, CheckCircle, ArrowRight, Settings, CreditCard, Heart, Save } from 'lucide-react';
+import { X, AlertTriangle, CheckCircle, ArrowRight, Settings, CreditCard, Heart, Save, Shield } from 'lucide-react';
 import { Button } from './Button';
 import { getUserPlan } from '../lib/db';
 import type { PlanType } from '../lib/db';
+import { auth } from '../lib/firebase';
+import { updatePassword } from 'firebase/auth';
 
 interface SettingsModalProps {
   onClose: () => void;
 }
 
 export function SettingsModal({ onClose }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<'general' | 'subscription' | 'cancel'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'subscription' | 'cancel' | 'security'>('general');
   const [cancelStep, setCancelStep] = useState(1);
   const [selectedReason, setSelectedReason] = useState('');
   const [companyName, setCompanyName] = useState(() => localStorage.getItem('rrs_setting_company') || 'RRIO');
@@ -17,6 +19,8 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   const [selectedCurrency, setSelectedCurrency] = useState(() => localStorage.getItem('rrs_setting_currency') || 'USD');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordStatus, setPasswordStatus] = useState('');
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -33,52 +37,53 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
   };
 
   const navItems: Array<{
-    key: 'general' | 'subscription' | 'cancel';
+    key: 'general' | 'subscription' | 'security' | 'cancel';
     icon: React.ReactNode;
     label: string;
     danger?: boolean;
   }> = [
-    { key: 'general', icon: <Settings size={15} />, label: 'Genel Ayarlar' },
-    { key: 'subscription', icon: <CreditCard size={15} />, label: 'Abonelik' },
-    { key: 'cancel', icon: <AlertTriangle size={15} />, label: 'İptal & İade', danger: true },
+    { key: 'general', icon: <Settings size={15} />, label: 'General Settings' },
+    { key: 'subscription', icon: <CreditCard size={15} />, label: 'Subscription' },
+    { key: 'security', icon: <Shield size={15} />, label: 'Security' },
+    { key: 'cancel', icon: <AlertTriangle size={15} />, label: 'Cancel & Refund', danger: true },
   ];
 
   const renderGeneral = () => (
     <div className="stack-md animate-in">
       <div>
         <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.375rem' }}>
-          Genel Sistem Ayarları
+          General System Settings
         </h3>
         <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-          Platform genelindeki varsayılan değerleri ve AI stüdyo tonunu özelleştirin.
+          Customize platform-wide defaults and AI studio tone.
         </p>
       </div>
 
       <div className="form-group">
-        <label className="form-label">Firma Adınız</label>
+        <label className="form-label">Company Name</label>
         <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)}
           className="form-input" />
       </div>
 
       <div className="form-group">
-        <label className="form-label">Varsayılan İletişim Tonu</label>
+        <label className="form-label">Default Communication Tone</label>
         <select value={replyTone} onChange={(e) => setReplyTone(e.target.value)} className="form-select">
-          <option value="formal">Kurumsal &amp; Ciddi (Varsayılan)</option>
-          <option value="friendly">Samimi &amp; Yakın</option>
+          <option value="formal">Corporate & Serious (Default)</option>
+          <option value="friendly">Friendly & Warm</option>
         </select>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
         <div className="form-group">
-          <label className="form-label">Para Birimi</label>
+          <label className="form-label">Currency</label>
           <select value={selectedCurrency} onChange={(e) => setSelectedCurrency(e.target.value)} className="form-select">
-            <option value="USD">Dolar ($)</option>
+            <option value="USD">Dollar ($)</option>
             <option value="EUR">Euro (€)</option>
-            <option value="TRY">Türk Lirası (₺)</option>
+            <option value="TRY">Turkish Lira (₺)</option>
           </select>
         </div>
         <div className="form-group">
-          <label className="form-label">Çalışma Prensibi</label>
+          <label className="form-label">Working Principle</label>
           <div style={{
             background: 'rgba(5,6,15,0.7)', border: '1px solid var(--border)',
             borderRadius: 'var(--r-sm)', padding: '0.75rem 1rem',
@@ -101,10 +106,10 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
       }}>
         <div>
           <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.1rem' }}>
-            Kurtarma Uyarıları
+            Recovery Alerts
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Kritik sızıntı tespitlerinde bildirim al
+            Get notified on critical leakage detections
           </div>
         </div>
         <label className="toggle-label">
@@ -121,11 +126,78 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         display: 'flex', gap: '0.75rem', justifyContent: 'flex-end',
         paddingTop: '1rem', borderTop: '1px solid var(--border)',
       }}>
-        <Button variant="outline" onClick={onClose}>Kapat</Button>
+        <Button variant="outline" onClick={onClose}>Close</Button>
         <Button variant="glow-blue" onClick={handleSaveSettings}>
-          <Save size={14} /> {isSaved ? '✓ Kaydedildi!' : 'Değişiklikleri Kaydet'}
+          <Save size={14} /> {isSaved ? '✓ Saved!' : 'Save Changes'}
         </Button>
       </div>
+    </div>
+  );
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordStatus('');
+    if (!auth.currentUser) {
+      setPasswordStatus('Error: You are not logged in as Admin.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordStatus('Error: Password must be at least 6 characters.');
+      return;
+    }
+    try {
+      await updatePassword(auth.currentUser, newPassword);
+      setPasswordStatus('Success: Password updated securely!');
+      setNewPassword('');
+    } catch (err: any) {
+      console.error(err);
+      setPasswordStatus('Error: ' + err.message);
+    }
+  };
+
+  const renderSecurity = () => (
+    <div className="stack-md animate-in">
+      <div>
+        <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.375rem' }}>
+          Security & Admin Credentials
+        </h3>
+        <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
+          Update your Admin password here. Ensure you choose a strong password.
+        </p>
+      </div>
+
+      <form onSubmit={handlePasswordChange} className="stack-md" style={{
+        background: 'rgba(5,6,15,0.5)', border: '1px solid var(--border)',
+        borderRadius: 'var(--r-sm)', padding: '1.5rem',
+      }}>
+        {passwordStatus && (
+          <div style={{
+            padding: '0.75rem 1rem', marginBottom: '1rem',
+            borderRadius: 'var(--r-sm)',
+            background: passwordStatus.startsWith('Success') ? 'rgba(56,242,150,0.08)' : 'rgba(255,82,119,0.08)',
+            border: `1px solid ${passwordStatus.startsWith('Success') ? 'rgba(56,242,150,0.22)' : 'rgba(255,82,119,0.22)'}`,
+            color: passwordStatus.startsWith('Success') ? 'var(--status-success)' : 'var(--status-danger)',
+            fontSize: '0.8125rem', fontWeight: 500,
+          }}>
+            {passwordStatus}
+          </div>
+        )}
+
+        <div className="form-group">
+          <label className="form-label">New Password</label>
+          <input 
+            type="password" 
+            value={newPassword} 
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="form-input" 
+            placeholder="Minimum 6 characters"
+          />
+        </div>
+
+        <Button variant="glow-blue" type="submit" style={{ width: '100%' }}>
+          <Shield size={14} style={{ marginRight: '0.5rem' }} /> Update Password
+        </Button>
+      </form>
     </div>
   );
 
@@ -133,27 +205,27 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
     const currentPlan: PlanType = getUserPlan();
 
     const getPlanDisplay = (plan: PlanType) => {
-      if (plan === 'PRO') return { name: 'Pro Plan', desc: '$97/Ay · Sınırsız analiz' };
-      if (plan === 'AGENCY') return { name: 'Agency Plan', desc: '$197/Ay · Çoklu hesap' };
-      return { name: 'Ücretsiz Plan', desc: 'Sınırlı analiz kapasitesi' };
+      if (plan === 'PRO') return { name: 'Pro Plan', desc: '$97/Mo · Unlimited analysis' };
+      if (plan === 'AGENCY') return { name: 'Agency Plan', desc: '$197/Mo · Multiple accounts' };
+      return { name: 'Free Plan', desc: 'Limited analysis capacity' };
     };
 
     const planDisplay = getPlanDisplay(currentPlan);
 
     const plans = [
-      { name: 'Pro Plan', desc: 'Sınırsız Şirket, AI Yanıt Stüdyosu, PDF Raporlama', price: '$97 / Ay', planKey: 'PRO' as PlanType },
-      { name: 'Agency Plan', desc: 'Özel Veritabanı, Entegrasyon API, Dedicated VPS', price: '$197 / Ay', planKey: 'AGENCY' as PlanType },
-      { name: 'Enterprise VPS', desc: 'Özel Sunucu, Sınırsız Entegrasyon, 7/24 Destek', price: 'İletişime Geçin', planKey: null },
+      { name: 'Pro Plan', desc: 'Unlimited Companies, AI Reply Studio, PDF Reporting', price: '$97 / Mo', planKey: 'PRO' as PlanType },
+      { name: 'Agency Plan', desc: 'Private Database, Integration API, Dedicated VPS', price: '$197 / Mo', planKey: 'AGENCY' as PlanType },
+      { name: 'Enterprise VPS', desc: 'Dedicated Server, Unlimited Integrations, 24/7 Support', price: 'Contact Us', planKey: null },
     ];
 
     return (
       <div className="stack-md animate-in">
         <div>
           <h3 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.375rem' }}>
-            Abonelik ve Limit Bilgisi
+            Subscription & Limits
           </h3>
           <p style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
-            Aktif paketinizi görüntüleyin ve diğer planları inceleyin.
+            View your active package and explore other plans.
           </p>
         </div>
 
@@ -167,14 +239,14 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
           overflow: 'hidden',
         }}>
           <div style={{ position: 'absolute', top: '0.875rem', right: '0.875rem' }}>
-            <span className="badge badge-success">Aktif</span>
+            <span className="badge badge-success">Active</span>
           </div>
           <span style={{
             display: 'block', fontSize: '0.65rem', fontWeight: 700,
             letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent-primary)',
             marginBottom: '0.375rem',
           }}>
-            Mevcut Plan
+            Current Plan
           </span>
           <span style={{ display: 'block', fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
             {planDisplay.name}
@@ -182,7 +254,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
           <span style={{ fontSize: '0.8125rem', color: 'var(--text-muted)' }}>
             {planDisplay.desc} &nbsp;·&nbsp;
             <span style={{ color: 'var(--status-warning)', fontStyle: 'italic' }}>
-              (Demo ortamında ödeme aktif değildir)
+              (Payment is not active in Demo environment)
             </span>
           </span>
         </div>
@@ -190,7 +262,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         {/* Plan list */}
         <div className="stack-xs">
           <span style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-faint)' }}>
-            Tüm Paketler
+            All Packages
           </span>
 
           {plans.map((plan) => {
@@ -206,7 +278,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
               }}>
                 <div>
                   <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.15rem' }}>
-                    {plan.name} {isActive && <span className="badge badge-primary" style={{ fontSize: '0.6rem', marginLeft: '0.375rem' }}>Aktif</span>}
+                    {plan.name} {isActive && <span className="badge badge-primary" style={{ fontSize: '0.6rem', marginLeft: '0.375rem' }}>Active</span>}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{plan.desc}</div>
                 </div>
@@ -222,7 +294,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         </div>
 
         <div style={{ paddingTop: '0.75rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'flex-end' }}>
-          <Button variant="outline" onClick={onClose}>Kapat</Button>
+          <Button variant="outline" onClick={onClose}>Close</Button>
         </div>
       </div>
     );
@@ -240,15 +312,15 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
           <AlertTriangle size={24} style={{ color: 'var(--status-warning)' }} />
         </div>
         <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
-          Aboneliği İptal Et &amp; İade İste
+          Cancel Subscription & Request Refund
         </h3>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.65 }}>
-          Ayrıldığınızı görmek bizi üzer. Hizmetimizi geliştirebilmemiz için lütfen ayrılma nedeninizi paylaşın.
+          We are sad to see you go. Please share your reason for leaving so we can improve our service.
         </p>
       </div>
 
       <div className="stack-xs">
-        {['Fiyat çok yüksek', 'İstediğim sonucu alamadım', 'Sistemi karmaşık buldum', 'Sadece denemek istemiştim'].map((reason) => (
+        {["Price is too high", "Didn't get the desired result", "Found the system complicated", "Just wanted to try it out"].map((reason) => (
           <label key={reason} style={{
             display: 'flex', alignItems: 'center', gap: '0.875rem',
             padding: '0.875rem 1rem',
@@ -277,9 +349,9 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
       </div>
 
       <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
-        <Button variant="outline" style={{ flex: 1 }} onClick={onClose}>Vazgeç</Button>
+        <Button variant="outline" style={{ flex: 1 }} onClick={onClose}>Cancel</Button>
         <Button variant="glow-orange" style={{ flex: 1 }} disabled={!selectedReason} onClick={() => setCancelStep(2)}>
-          Devam Et <ArrowRight size={14} />
+          Continue <ArrowRight size={14} />
         </Button>
       </div>
     </div>
@@ -289,10 +361,10 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
     <div className="stack-md animate-in">
       <div style={{ textAlign: 'center' }}>
         <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
-          Belki fikrinizi değiştirirsiniz?
+          Maybe you'll change your mind?
         </h3>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-          Aboneliğinizi iptal etmek yerine size özel bir teklif var.
+          Instead of canceling your subscription, we have a special offer for you.
         </p>
       </div>
 
@@ -311,13 +383,13 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
           <Heart size={24} style={{ color: 'var(--status-success)' }} />
         </div>
         <h4 style={{ fontSize: '1.125rem', fontWeight: 800, color: 'var(--status-success)', marginBottom: '0.625rem' }}>
-          2 Ay Ücretsiz Pro Üyelik
+          2 Months Free Pro Membership
         </h4>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: '1.25rem' }}>
-          İptal işlemini durdurun ve sistemi 2 ay daha ücretsiz kullanın. Herhangi bir kart ücreti çekilmeyecektir.
+          Stop the cancellation process and use the system for another 2 months for free. No card fee will be charged.
         </p>
         <Button variant="glow-green" style={{ width: '100%' }} onClick={onClose}>
-          Teklifi Kabul Et ve Devam Et
+          Accept Offer & Continue
         </Button>
       </div>
 
@@ -331,7 +403,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
             padding: '0.5rem',
           }}
         >
-          Hayır, iptal ve iade işlemine devam et <ArrowRight size={13} />
+          No, continue with cancellation and refund <ArrowRight size={13} />
         </button>
       </div>
     </div>
@@ -349,13 +421,13 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         <CheckCircle size={32} style={{ color: 'var(--status-success)' }} />
       </div>
       <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-main)' }}>
-        İptal ve İade Talebi Alındı
+        Cancellation and Refund Request Received
       </h3>
       <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.65, maxWidth: '360px', margin: '0 auto' }}>
-        İade talebiniz işleme alınmıştır. Bankanızın süreçlerine bağlı olarak ücret iadesi 3-5 iş günü içerisinde kartınıza yansıyacaktır.
+        Your refund request has been processed. Depending on your bank's processes, the refund will be reflected on your card within 3-5 business days.
       </p>
       <Button variant="outline" style={{ width: '100%', marginTop: '0.5rem' }} onClick={onClose}>
-        Panoya Dön
+        Return to Dashboard
       </Button>
     </div>
   );
@@ -377,10 +449,10 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
             </div>
             <div>
               <h2 style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.2 }}>
-                Hesap &amp; Ayarlar
+                Account & Settings
               </h2>
               <p style={{ fontSize: '0.7rem', color: 'var(--text-faint)', marginTop: '0.1rem' }}>
-                Sistem tercihlerinizi yönetin
+                Manage your system preferences
               </p>
             </div>
           </div>
@@ -424,6 +496,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
         <div className="modal-body settings-modal-body">
           {activeTab === 'general' && renderGeneral()}
           {activeTab === 'subscription' && renderSubscription()}
+          {activeTab === 'security' && renderSecurity()}
           {activeTab === 'cancel' && (
             <>
               {cancelStep === 1 && renderCancelStep1()}

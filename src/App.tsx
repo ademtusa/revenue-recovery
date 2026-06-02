@@ -6,6 +6,8 @@ import { AuthView } from './views/AuthView';
 import { PipelineView } from './views/PipelineView';
 import { initializeDB } from './lib/db';
 import { FeedbackModal } from './components/FeedbackModal';
+import { AdminLoginView } from './admin/AdminLoginView';
+import { AdminPanel } from './admin/AdminPanel';
 
 type AppState = 'upload' | 'analyzing' | 'diagnosis' | 'pipeline';
 
@@ -16,6 +18,15 @@ function App() {
     initializeDB();
     return localStorage.getItem('rrs_active_session');
   });
+  const [currentHash, setCurrentHash] = useState(window.location.hash);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setCurrentHash(window.location.hash);
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
 
   const handleAuthSuccess = (email: string) => {
@@ -30,7 +41,7 @@ function App() {
   };
 
   const handleDemoReset = () => {
-    if (!window.confirm('Tüm demo verisi silinecek ve oturumunuz kapatılacak. Emin misiniz?')) return;
+    if (!window.confirm('All demo data will be deleted and you will be logged out. Are you sure?')) return;
 
     const keysToRemove = [
       'rrio_revenue_records',
@@ -81,6 +92,32 @@ function App() {
     localStorage.setItem('rrio_feedback_shown', 'true');
     setShowFeedback(false);
   };
+
+  // ── ADMIN ROUTING ──────────────────────────────────────────────
+  const isAdminRoute  = currentHash === '#admin';
+  const isAdminAuthed = localStorage.getItem('rrio_admin_auth') === 'true';
+
+  if (isAdminRoute) {
+    if (isAdminAuthed) {
+      return (
+        <AdminPanel
+          onExit={() => {
+            localStorage.removeItem('rrio_admin_auth');
+            window.location.hash = '';
+          }}
+        />
+      );
+    }
+    return (
+      <AdminLoginView
+        onSuccess={() => {
+          // force re-render by reloading hash
+          window.location.reload();
+        }}
+      />
+    );
+  }
+  // ──────────────────────────────────────────────────────────────
 
   if (!userEmail) {
     return <AuthView onAuthSuccess={handleAuthSuccess} />;
@@ -136,7 +173,7 @@ function App() {
           minHeight: '40px',
         }}
       >
-        💬 Geri Bildirim
+        💬 Feedback
       </button>
 
       {/* Feedback Modal */}

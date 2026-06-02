@@ -23,7 +23,7 @@ export function GoogleOAuthModal({ onClose, onSuccess }: GoogleOAuthModalProps) 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
             <Cpu size={18} style={{ color: 'var(--accent-primary)' }} />
             <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)' }}>
-              Google Workspace Entegrasyonu
+              Google Workspace Integration
             </h2>
           </div>
           <button onClick={onClose} style={{
@@ -46,8 +46,8 @@ export function GoogleOAuthModal({ onClose, onSuccess }: GoogleOAuthModalProps) 
         }}>
           <AlertTriangle size={14} style={{ color: 'var(--status-warning)', flexShrink: 0, marginTop: '1px' }} />
           <p style={{ fontSize: '0.75rem', color: 'var(--status-warning)', lineHeight: 1.55, margin: 0 }}>
-            Bu bir <strong>demo simülasyonudur</strong>. Gerçek Google hesabınıza bağlanılmaz,
-            hiçbir veri okunmaz veya saklanmaz.
+            This is a <strong>demo simulation</strong>. It does not connect to your real Google account,
+            no data is read or stored.
           </p>
         </div>
 
@@ -95,15 +95,15 @@ export function GoogleOAuthModal({ onClose, onSuccess }: GoogleOAuthModalProps) 
             fontSize: '1.125rem', fontWeight: 800, letterSpacing: '-0.02em',
             color: 'var(--text-main)', marginBottom: '0.625rem', textAlign: 'center',
           }}>
-            E-Posta Arşivini Tara
+            Scan Email Archive
           </h3>
           <p style={{
             fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.65,
             textAlign: 'center', marginBottom: '1.75rem',
           }}>
-            Gmail &amp; Takvim akışlarınız analiz edilerek sessiz kalmış fırsatlar,
-            unutulmuş teklifler ve soğuyan ilişkiler tespit edilecektir.
-            Yalnızca metadata ve iletişim frekansı okunur.
+            Your Gmail & Calendar streams will be analyzed to detect silent opportunities,
+            forgotten proposals, and cooling relationships.
+            Only metadata and communication frequency are read.
           </p>
 
           <button
@@ -115,7 +115,7 @@ export function GoogleOAuthModal({ onClose, onSuccess }: GoogleOAuthModalProps) 
             {connecting ? (
               <>
                 <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
-                Güvenli Bağlantı Kuruluyor...
+                Establishing Secure Connection...
               </>
             ) : (
               <>
@@ -125,7 +125,7 @@ export function GoogleOAuthModal({ onClose, onSuccess }: GoogleOAuthModalProps) 
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
-                Google ile Devam Et
+                Continue with Google
               </>
             )}
           </button>
@@ -143,13 +143,13 @@ export function GoogleOAuthModal({ onClose, onSuccess }: GoogleOAuthModalProps) 
             fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.1em',
             textTransform: 'uppercase', color: 'var(--status-success)',
           }}>
-            <ShieldCheck size={13} /> Global Güvenlik Standartları
+            <ShieldCheck size={13} /> Global Security Standards
           </div>
           <ul className="stack-xs">
             {[
-              'RRIO verilerinizi ASLA kendi sunucularında saklamaz veya üçüncü partilerle paylaşmaz.',
-              'Sadece "Read-Only" (Salt Okunur) analiz izni istenir. E-postalarınız değiştirilemez.',
-              'Tamamen GDPR ve KVKK uyumlu uçtan uca şifreleme mimarisi (AES-256).',
+              'RRIO NEVER stores your data on its servers or shares it with third parties.',
+              'Only "Read-Only" analysis permission is requested. Your emails cannot be modified.',
+              'Fully GDPR compliant end-to-end encryption architecture (AES-256).',
             ].map((item, i) => (
               <li key={i} style={{
                 display: 'flex', alignItems: 'flex-start', gap: '0.625rem',
